@@ -137,6 +137,7 @@ Map<T, U>|✅|HashMap<T, U>||
 var|❌||
 dynamic|❌||
 Object|❌||
+Custom Class|✅||
 
 #### Note: don't support `List a= [];`, because  it's the same as `List<dynamic> a =[];`, , and  `dynamic` is't support, `Map` is also like this.
 

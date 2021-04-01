@@ -135,6 +135,7 @@ Map<T,U>|✅|HashMap<T,U>||
 var|❌||
 dynamic|❌||
 Object|❌||
+自定义类|✅||
 
 #### 注意: 不支持 `List a= [];`, 因为语句等同于 `List<dynamic> a =[];`, 而 dynamic 类型是不支持的, Map 同样如此<br><br><br>
 
