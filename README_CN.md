@@ -48,7 +48,7 @@ class Route {
 
 ## 第一步
 
-把 `platforms_source_gen` 添加到 `pubspec.yaml` 文件中, 并在命令行运行命令 `dart pub get` 下载, 当前你也可以直接点 IDE 上面的 `puh get` 直接下载:
+把 `platforms_source_gen` 添加到 `pubspec.yaml` 文件中, 并在命令行运行命令 `dart pub get` 下载, 当然你也可以直接点 IDE 上面的 `puh get` 直接下载:
 
 ```
 dev_dependencies:
@@ -78,25 +78,26 @@ class Route {
 
 ```
 
-//todo fix right link
-更多例子你可以点击这里 [example class](https://pub.dev/packages/platforms_source_gen/versions).
+更多例子你可以点击这里 [example class](https://github.com/siyehua/platforms_source_gen/tree/master/lib/example).
 
 ## 第三步
 
 写一个 **main** 函数在 `./test/any.dart` 路径下, 点击左边的按钮, 运行 run:
 
 
-### 注意:  `any.dart` 被放在了 test 目录下, 名字可以是任意, 不能直接放在项目的 lib 下, 因为在 lib 上的 main 方法会当成是
+#### 注意:  `any.dart` 被放在了 test 目录下, 名字可以是任意, 不能直接放在项目的 lib 下, 因为在 lib 上的 main 方法会当成是
 flutter 的应用入口, 会直接运行起一个 app.
 
 ```dart
 import 'package:platforms_source_gen/platforms_source_gen.dart';
 
-void main(){
-  platforms_source_gen_init("./lib/example",//你上面写的 dart 文件目录
-    "com.siyehua.example",//Android 代码的 包名
-    "./Android_gen" //自动是个代码的路径, 你可以直接改成你的 Android 项目路径
-    );
+void main() {
+ List<GenClassBean> genClassBeans =platforms_source_gen_init(
+      "./lib/example", //you dart file path
+      "com.siyehua.example", //your android's  java class package name
+      "./Android_gen" //your android file save path
+  );
+  platforms_source_gent_start("com.siyehua.example", "./Android_gen", genClassBeans);
 }
 ```
 
@@ -111,13 +112,13 @@ void main(){
 实现|❌|
 组合|✅|
 
-## 注意: `接口` 不允许有任何已经实现的方法,属性不允许有任何默认值, 在 Java 中, 会被直接转成接口, 接口不允许有默认值或默认实现.
+#### 注意: `接口` 不允许有任何已经实现的方法,属性不允许有任何默认值, 在 Java 中, 会被直接转成接口, 接口不允许有默认值或默认实现.<br><br><br>
 
 方法|支持|
 ----|----|
 所有|✅|
 
-支持`接口`中的抽象方法, 不支持已实现的方法, 不支持顶级方法
+#### 支持`接口`中的抽象方法, 不支持已实现的方法, 不支持顶级方法<br><br><br>
 
 类型|支持|Android|iOS|
 ----|----|----|----|
@@ -135,7 +136,7 @@ var|❌||
 dynamic|❌||
 Object|❌||
 
-注意: 不支持 `List a= [];`, 因为语句等同于 `List<dynamic> a =[];`, 而 dynamic 类型是不支持的, Map 同样如此
+#### 注意: 不支持 `List a= [];`, 因为语句等同于 `List<dynamic> a =[];`, 而 dynamic 类型是不支持的, Map 同样如此<br><br><br>
 
 
 # 问题 & BUG
@@ -143,5 +144,5 @@ Object|❌||
 2. 为什么依赖要加在 `dev_dependencies` 中? <br> 因为这是一个开发工具,这个工具的代码无需打包进源码中, 故只需要加在 dev_dependencies 即可.
 3. 这个工具和 [source_gen](https://pub.dev/packages/source_gen) 有什么不同, 为什么不直接使用它?<br>`source_gen` 主要是依赖 run build 来生成自己想要的 dart 代码, 而这个工具是根据 dart 代码生成其他平台代码, 方法和作用不相同.
 
-更多问题和 Bug, 欢迎前往 [github](https://pub.dev/packages/platforms_source_gen/versions)
+更多问题和 Bug, 欢迎前往 [github](https://github.com/siyehua/platforms_source_gen/issues)
 

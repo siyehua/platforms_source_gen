@@ -81,8 +81,7 @@ class Route {
 
 ```
 
-//todo
-more [example class](https://pub.dev/packages/platforms_source_gen/versions), your can get it from github.
+more [example class](https://github.com/siyehua/platforms_source_gen/tree/master/lib/example), your can get it from github.
 
 ## 03 Step
 
@@ -93,11 +92,13 @@ write a **main fun**  in `./test/any.dart` and run:
 ```dart
 import 'package:platforms_source_gen/platforms_source_gen.dart';
 
-void main(){
-  platforms_source_gen_init("./lib/example/",//you dart file dir
-    "com.siyehua.example",//your android's  java class package name
-    "./Android_gen" //your android file save path
-    );
+void main() {
+ List<GenClassBean> genClassBeans =platforms_source_gen_init(
+      "./lib/example", //you dart file path
+      "com.siyehua.example", //your android's  java class package name
+      "./Android_gen" //your android file save path
+  );
+  platforms_source_gent_start("com.siyehua.example", "./Android_gen", genClassBeans);
 }
 ```
 
@@ -112,14 +113,14 @@ extends|❌|
 implements |❌|
 compose|✅|
 
-## Note: `abstract class` must not have any methods that have been implemented, property must not have any default value.
+#### Note: `abstract class` must not have any methods that have been implemented, property must not have any default value.<br><br><br>
 
 
 method|support|
 ----|----|
 all|✅|
 
-## Note: support abstract method in `abstract class`, don't support method no in class.
+#### Note: support abstract method in `abstract class`, don't support method no in class.<br><br><br>
 
 Type|support|Android|iOS|
 ----|----|----|----|
@@ -137,12 +138,12 @@ var|❌||
 dynamic|❌||
 Object|❌||
 
-Note: don't support `List a= [];`, because  it's the same as `List<dynamic> a =[];`, , and  `dynamic` is't support, `Map` is also like this.
+#### Note: don't support `List a= [];`, because  it's the same as `List<dynamic> a =[];`, , and  `dynamic` is't support, `Map` is also like this.
 
 # FQA & BUG
 1. iOS is support?<br> Yes, but this version only support Android, Welcome anybody push iOS support. Web or Desktop, and any other platform language.
 2. Why add  package in dev_dependencies? <br> because this tools only create platform language but not dart, so we don't need add it in dependencies.
 3. it's the same with [source_gen](https://pub.dev/packages/source_gen) or builder?<br> the `source_gen` will create dart code, but this tools only create platform languages.
 
-more questions or but, you can go to [github](https://pub.dev/packages/platforms_source_gen/versions)
+more questions or but, you can go to [github](https://github.com/siyehua/platforms_source_gen/issues)
 
