@@ -25,3 +25,7 @@
 ## 0.2.4
 
 * add import info
+
+## 0.2.6
+
+* fix: can't create file use dart io

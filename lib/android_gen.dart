@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:math';
 
-
 import 'method_parse.dart';
 import 'platforms_source_gen.dart';
 import 'property_parse.dart';
@@ -178,7 +177,18 @@ class JavaCreate {
       allContent +=
           "${importStr}public ${absStr} ${value.classInfo.name} {\n$propertyStr ${_method(value.methods)} }";
       javaFile.writeAsStringSync(allContent);
+      if (!javaFile.existsSync()) {
+        //if not create use dart io, use shell
+        _savePath(allContent, javaFile.path);
+      }
     });
+  }
+
+  static void _savePath(String content, String path) async {
+    ProcessResult a = await Process.run(
+        'bash', ['-c', "echo '$content' >> $path"],
+        runInShell: true);
+    print("file: $path \n create result: ${a.exitCode}");
   }
 
   static void _addObjectImport(RegExp exp, List<String> map, int index,
