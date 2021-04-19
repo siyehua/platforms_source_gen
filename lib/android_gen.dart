@@ -186,7 +186,7 @@ class JavaCreate {
 
   static void _savePath(String content, String path) async {
     ProcessResult a = await Process.run(
-        'bash', ['-c', "echo '$content' >> $path"],
+        'bash', ['-c', "echo '${content.replaceAll("'", "\'\"\'\"\'")}' >> $path"],
         runInShell: true);
     print("file: $path \n create result: ${a.exitCode}");
   }
