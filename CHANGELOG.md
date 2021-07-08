@@ -37,3 +37,7 @@
 ## 0.3.1
 
 * fix: static property parse error
+
+## 0.3.2
+
+* feat: add subType in property

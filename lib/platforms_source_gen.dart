@@ -177,30 +177,6 @@ bool _foundImport(String str, List<String> importList) {
 
 String tmpLineStr = "";
 
-void _formatLine(String str, GenClassBean genClassBean) {
-  MethodInfo methodInfo = parseMethod(str);
-  if (methodInfo != null) {
-    genClassBean.methods.add(methodInfo);
-    return;
-  }
-  //pattern line end
-  RegExp exp = new RegExp(r";[ ]*//|;");
-  if (!exp.hasMatch(str)) {
-    //the line is't end, so continue...
-
-    tmpLineStr += str;
-  } else {
-    // print("property str: " + tmpLineStr + str);
-    int endIndex = str.lastIndexOf(";");
-    str = str.substring(0, endIndex);
-    str = tmpLineStr + str;
-    str = str.replaceAll("new", "");
-    str = str.trimLeft().trimRight().trim();
-    genClassBean.properties.add(parseProperty(str));
-    tmpLineStr = ""; //clear tmp str
-  }
-}
-
 List<String> ccc(List<String> data) {
   var a1 = <String>[];
   data.forEach((element) async {

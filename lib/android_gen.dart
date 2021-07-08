@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'method_parse.dart';
 import 'platforms_source_gen.dart';
@@ -45,10 +44,10 @@ class JavaCreate {
           .replaceAll(",", "");
 
       //property
-      String propertyStr = _property(value, value.properties);
+      String propertyStr = property(value, value.properties);
 
       //method
-      String methodStr = _method(value.methods);
+      String methodStr = method(value.methods);
 
       String absStr = "class";
       if (value.classInfo.type == 1) {
@@ -65,10 +64,10 @@ class JavaCreate {
   }
 
   /// create property
-  static String _property(GenClassBean genBean, List<Property> properties) {
+  static String property(GenClassBean genBean, List<Property> properties) {
     String propertyStr = "";
     properties.forEach((property) {
-      String typeStr = _getTypeStr(property, wantAddPre: true);
+      String typeStr = getTypeStr(property, wantAddPre: true);
       String name = property.name;
       String defaultValue = property.defaultValue1;
       // if (genBean.classInfo.type == 1) {
@@ -133,12 +132,12 @@ class JavaCreate {
   }
 
   /// create method
-  static String _method(List<MethodInfo> methods) {
+  static String method(List<MethodInfo> methods) {
     String result = "";
     methods.forEach((method) {
       String argType = "";
       method.args.forEach((arg) {
-        argType += _getTypeStr(arg) + " " + arg.name + ", ";
+        argType += getTypeStr(arg) + " " + arg.name + ", ";
       });
       if (argType.endsWith(", ")) {
         //remove ", " ,because java method arg can't end with ", "
@@ -152,7 +151,7 @@ class JavaCreate {
       //   body = "{}";
       // }
       result += "\t" +
-          _getTypeStr(method.returnType) +
+          getTypeStr(method.returnType) +
           " " +
           method.name +
           "(" +
@@ -164,27 +163,26 @@ class JavaCreate {
 
   /// cover dart type to java type
   /// [wantAddPre] if true, it when add pre keywords, like: public static final .....
-  static String _getTypeStr(Property property, {bool wantAddPre = false}) {
+  static String getTypeStr(Property property, {bool wantAddPre = false}) {
     String typeStr;
-    if (property.typeInt == 1) {
-      //list
-      typeStr = "ArrayList<" + _getTypeStr(property.firstType) + ">";
-    } else if (property.typeInt == 2) {
-      //map
-      typeStr = "HashMap<" +
-          _getTypeStr(property.firstType) +
-          ", " +
-          _getTypeStr(property.secondType) +
-          ">";
+    var baseType = typeMap[property.type];
+    if (baseType != null) {
+      //base
+      typeStr = baseType;
     } else {
-      var baseType = typeMap[property.type];
-      if (baseType != null) {
-        //base
-        typeStr = baseType;
-      } else {
-        //other not base type
-        typeStr = property.type;
+      //other not base type
+      typeStr = property.type;
+    }
+    if (property.subType.isNotEmpty) {
+      typeStr += "<";
+      property.subType.forEach((element) {
+        typeStr += getTypeStr(element) + ", ";
+      });
+      if (typeStr.endsWith(", ")) {
+        //remove ", " ,because java method arg can't end with ", "
+        typeStr = typeStr.substring(0, typeStr.length - 2);
       }
+      typeStr += ">";
     }
     if (wantAddPre) {
       if (property.isConst) {

@@ -64,7 +64,7 @@ List<GenClassBean> reflectStart(List<Type> types) {
       method.args = findParameters(classMirror, null, element.parameters);
       var returnProperty = Property();
       findTypeArguments(returnProperty, [element.returnType]);
-      method.returnType = returnProperty.firstType;
+      method.returnType = returnProperty.subType[0];
     });
     genClass.methods = allMethod;
   });
@@ -83,13 +83,6 @@ List<Property> findParameters(ClassMirror classMirror,
     var type = value.type;
     property.type = MirrorSystem.getName(type.qualifiedName);
     property.name = MirrorSystem.getName(value.simpleName);
-    if (property.type == "dart.core.List") {
-      property.typeInt = 1;
-    } else if (property.type == "dart.core.Map") {
-      property.typeInt = 2;
-    } else {
-      property.typeInt = 0;
-    }
     if (value.isStatic) {
       InstanceMirror instanceMirror = classMirror.getField(value.simpleName);
       property.defaultValue1 = "${instanceMirror.reflectee}";
@@ -106,22 +99,11 @@ List<Property> findParameters(ClassMirror classMirror,
 }
 
 void findTypeArguments(Property target, List<TypeMirror> typeArguments) {
-  typeArguments.take(2).toList().asMap().forEach((key, value) {
+  typeArguments.toList().asMap().forEach((key, value) {
     var property = Property();
     var typeArguments = MirrorSystem.getName(value.qualifiedName);
     property.type = typeArguments;
-    if (property.type == "dart.core.List") {
-      property.typeInt = 1;
-    } else if (property.type == "dart.core.Map") {
-      property.typeInt = 2;
-    } else {
-      property.typeInt = 0;
-    }
-    if (key == 0) {
-      target.firstType = property;
-    } else {
-      target.secondType = property;
-    }
+    target.subType.add(property);
     findTypeArguments(property, value.typeArguments);
   });
 }
