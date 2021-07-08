@@ -29,3 +29,7 @@
 ## 0.2.7
 
 * fix: can't create file use dart io
+
+## 0.3.0
+
+* feat: use reflect parse file and class

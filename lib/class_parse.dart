@@ -1,10 +1,23 @@
 class ClassInfo {
+  ClassInfo();
   int type = -1; //0. normal class, 1: abstract class
   String name;
 
   @override
   String toString() {
     return 'ClassInfo{type: $type, name: $name}';
+  }
+
+  ClassInfo.fromJson(Map<String, dynamic> json) {
+    name = json['name'];
+    type = json['type'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['name'] = this.name;
+    data['type'] = this.type;
+    return data;
   }
 }
 

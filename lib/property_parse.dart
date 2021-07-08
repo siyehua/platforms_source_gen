@@ -1,13 +1,68 @@
 class Property {
-  int typeInt = 0;//0: normal, 1:List, 2:Map
+  int typeInt = 0; //0: normal, 1:List, 2:Map
   String type = "";
   String name = "";
   String defaultValue1 = "";
+  bool isStatic = false;
+  bool isConst = false;
+  bool isFinal = false;
+  bool isPrivate = false;
+  Property firstType; //first type, for example: list ,  map key
+  Property secondType; //second type, map value
+
+  Property.fromJson(Map<String, dynamic> json) {
+    typeInt = json['typeInt'];
+    type = json['type'];
+    name = json['name'];
+    defaultValue1 = json['defaultValue1'];
+    isStatic = json['isStatic'];
+    isConst = json['isConst'];
+    isFinal = json['isFinal'];
+    isPrivate = json['isPrivate'];
+    firstType = json['firstType'] != null
+        ? new Property.fromJson(json['firstType'])
+        : null;
+    secondType = json['secondType'] != null
+        ? new Property.fromJson(json['secondType'])
+        : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['typeInt'] = this.typeInt;
+    data['type'] = this.type;
+    data['name'] = this.name;
+    data['defaultValue1'] = this.defaultValue1;
+    data['isStatic'] = this.isStatic;
+    data['isConst'] = this.isConst;
+    data['isFinal'] = this.isFinal;
+    data['isPrivate'] = this.isPrivate;
+    if (this.firstType != null) {
+      data['firstType'] = this.firstType.toJson();
+    }
+    if (this.secondType != null) {
+      data['secondType'] = this.secondType.toJson();
+    }
+    return data;
+  }
 
   @override
   String toString() {
-    return 'Property{type: $type, name: $name, defaultValue: $defaultValue1}';
+    return """{
+                "typeInt": $typeInt,
+                "type": "$type", 
+                "name": "$name", 
+                "defaultValue1": "$defaultValue1", 
+                "isStatic": $isStatic, 
+                "isConst": $isConst, 
+                "isFinal": $isFinal, 
+                "isPrivate": $isPrivate, 
+                "firstType": $firstType, 
+                "secondType": $secondType
+              }""";
   }
+
+  Property();
 }
 
 Property parseProperty(String str) {

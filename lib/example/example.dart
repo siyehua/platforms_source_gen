@@ -1,14 +1,6 @@
 import 'dart:typed_data';
 
 abstract class AbsClass {
-  int a;
-  int a1 = 0;
-
-  double c;
-  double c1 = 0.1;
-
-  String d;
-  String d1 = "defa";
 
   void aaa();
 
@@ -30,17 +22,13 @@ abstract class AbsClass {
   void a3(String a, int b);
 
   String a4(String a, int b);
-}
-//abstract[ ]*class[ ]*\S+[ ]*{
-// "bool": "Boolean",
-// "int": "Long",
-// "double": "Double",
-// "String": "String",
-// "Uint8List": "byte[]",
-// "Int32List": "int[]",
-// "Int64List": "long[]",
-// "Float64List": "double[]",
 
+  void methoid1(){}
+  Map<int,String> methoid2(){}
+  Map<int,String> methoid3(int a,){}
+  Map<int,String> methoid4(int a,String b){}
+  Map<int,String> methoid5(int a,List<String> b){}
+}
 class MyClass {
   // var a = ""; it's not support start with var
   //dynamic a = ""; it's not support start with dynamic
@@ -77,17 +65,17 @@ class MyClass {
   List<int> i;
   List<int> i1 = [];
   List<int> i2 = [1, 2, 3, 4];
-  List<InnerClass> j;
-  List<InnerClass> j1 = [];
-  List<InnerClass> j2 = [
-    InnerClass(),
-    InnerClass(),
-    InnerClass(),
-    InnerClass(),
-    InnerClass(),
-    InnerClass(),
-    InnerClass(),
-  ]; //
+  // List<InnerClass> j;
+  // List<InnerClass> j1 = [];
+  // List<InnerClass> j2 = [
+  //   InnerClass(),
+  //   InnerClass(),
+  //   InnerClass(),
+  //   InnerClass(),
+  //   InnerClass(),
+  //   InnerClass(),
+  //   InnerClass(),
+  // ]; //
 
   // List e = []; //don't do it, is the same List<dynamic>, it's not support
   // List<dynamic> f = []; ////don't do it, dynamic is not support
@@ -95,22 +83,33 @@ class MyClass {
   Map<String, int> k;
   Map<String, int> k1 = {};
   Map<String, int> k2 = {"key": 1, "key2": 2};
-  Map<InnerClass, InnerClass> l;
-  Map<InnerClass, InnerClass> l1;
-  Map<InnerClass, InnerClass> l2 = {
-    InnerClass(): InnerClass(),
-    InnerClass(): InnerClass(),
-    InnerClass(): InnerClass(),
-  };
+  // Map<InnerClass, InnerClass> l;
+  // Map<InnerClass, InnerClass> l1;
+  // Map<InnerClass, InnerClass> l2 = {
+  //   InnerClass(): InnerClass(),
+  //   InnerClass(): InnerClass(),
+  //   InnerClass(): InnerClass(),
+  // };
+
+
+  List<List<int>> i3 = [];
+  List<List<List<List<List<int>>>>> i4 = [];
+  Map<String, String> a456 = {};
+  Map<List<String>, String> a2 = {};
+  Map<List<String>, Map<String, int>> a3 = {};
+  Map<List<String>, Map<String, List<int>>> a4 = {};
+  Map<List<String>, Map<String, Map<int, List<Map<String, int>>>>> a5 = {};
+
+
 }
 
-class InnerClass {
-  String a;
-  int b;
-}
-
-class Route {
-  static const String main_page = "/main/page"; //main page
-  static const String mine_main = "/mine/main"; //
-  static const int int_value = 123;
-}
+// class InnerClass {
+//   String a;
+//   int b;
+// }
+//
+// class Route {
+//   static const String main_page = "/main/page"; //main page
+//   static const String mine_main = "/mine/main"; //
+//   static const int int_value = 123;
+// }
