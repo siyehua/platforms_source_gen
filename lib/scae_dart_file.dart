@@ -46,7 +46,8 @@ List<GenClassBean> reflectStart(List<Type> types) {
         .where((element) => element is VariableMirror)
         .map((e) => e as VariableMirror)
         .toList();
-    allProperty.addAll(findParameters(instanceMirror, propertyList));
+    allProperty
+        .addAll(findParameters(classMirror, instanceMirror, propertyList));
     genClass.properties = allProperty;
 
     ///set method
@@ -60,7 +61,7 @@ List<GenClassBean> reflectStart(List<Type> types) {
 
       method.name = MirrorSystem.getName(element.simpleName);
       method.isAbstract = element.isAbstract;
-      method.args = findParameters(null, element.parameters);
+      method.args = findParameters(classMirror, null, element.parameters);
       var returnProperty = Property();
       findTypeArguments(returnProperty, [element.returnType]);
       method.returnType = returnProperty.firstType;
@@ -73,7 +74,7 @@ List<GenClassBean> reflectStart(List<Type> types) {
   return genClassList;
 }
 
-List<Property> findParameters(
+List<Property> findParameters(ClassMirror classMirror,
     InstanceMirror instanceMirror, List<VariableMirror> params) {
   var parameters = <Property>[];
   params.forEach((value) {
@@ -89,7 +90,10 @@ List<Property> findParameters(
     } else {
       property.typeInt = 0;
     }
-    if (instanceMirror != null) {
+    if (value.isStatic) {
+      InstanceMirror instanceMirror = classMirror.getField(value.simpleName);
+      property.defaultValue1 = "${instanceMirror.reflectee}";
+    } else if (instanceMirror != null) {
       property.defaultValue1 =
           "${instanceMirror.getField(value.simpleName).reflectee}";
     }

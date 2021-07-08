@@ -108,8 +108,8 @@ class MyClass {
 //   int b;
 // }
 //
-// class Route {
-//   static const String main_page = "/main/page"; //main page
-//   static const String mine_main = "/mine/main"; //
-//   static const int int_value = 123;
-// }
+class Route {
+  static const String main_page = "/main/page"; //main page
+  static const String mine_main = "/mine/main"; //
+  static const int int_value = 123;
+}

@@ -33,3 +33,7 @@
 ## 0.3.0
 
 * feat: use reflect parse file and class
+
+## 0.3.1
+
+* fix: static property parse error
