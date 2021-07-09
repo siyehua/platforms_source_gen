@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 abstract class AbsClass {
-
   void aaa();
 
   String a11();
@@ -23,12 +22,19 @@ abstract class AbsClass {
 
   String a4(String a, int b);
 
-  void methoid1(){}
-  Map<int,String> methoid2(){}
-  Map<int,String> methoid3(int a,){}
-  Map<int,String> methoid4(int a,String b){}
-  Map<int,String> methoid5(int a,List<String> b){}
+  void methoid1() {}
+
+  Map<int, String> methoid2() {}
+
+  Map<int, String> methoid3(
+    int a,
+  ) {}
+
+  Map<int, String> methoid4(int a, String b) {}
+
+  Map<int, String> methoid5(int a, List<String> b) {}
 }
+
 class MyClass {
   // var a = ""; it's not support start with var
   //dynamic a = ""; it's not support start with dynamic
@@ -65,17 +71,8 @@ class MyClass {
   List<int> i;
   List<int> i1 = [];
   List<int> i2 = [1, 2, 3, 4];
-  // List<InnerClass> j;
-  // List<InnerClass> j1 = [];
-  // List<InnerClass> j2 = [
-  //   InnerClass(),
-  //   InnerClass(),
-  //   InnerClass(),
-  //   InnerClass(),
-  //   InnerClass(),
-  //   InnerClass(),
-  //   InnerClass(),
-  // ]; //
+  List<InnerClass> j;
+  List<InnerClass> j1 = [];
 
   // List e = []; //don't do it, is the same List<dynamic>, it's not support
   // List<dynamic> f = []; ////don't do it, dynamic is not support
@@ -83,14 +80,8 @@ class MyClass {
   Map<String, int> k;
   Map<String, int> k1 = {};
   Map<String, int> k2 = {"key": 1, "key2": 2};
-  // Map<InnerClass, InnerClass> l;
-  // Map<InnerClass, InnerClass> l1;
-  // Map<InnerClass, InnerClass> l2 = {
-  //   InnerClass(): InnerClass(),
-  //   InnerClass(): InnerClass(),
-  //   InnerClass(): InnerClass(),
-  // };
-
+  Map<InnerClass, InnerClass> l;
+  Map<InnerClass, InnerClass> l1;
 
   List<List<int>> i3 = [];
   List<List<List<List<List<int>>>>> i4 = [];
@@ -99,15 +90,13 @@ class MyClass {
   Map<List<String>, Map<String, int>> a3 = {};
   Map<List<String>, Map<String, List<int>>> a4 = {};
   Map<List<String>, Map<String, Map<int, List<Map<String, int>>>>> a5 = {};
-
-
 }
 
-// class InnerClass {
-//   String a;
-//   int b;
-// }
-//
+class InnerClass {
+  String a;
+  int b;
+}
+
 class Route {
   static const String main_page = "/main/page"; //main page
   static const String mine_main = "/mine/main"; //

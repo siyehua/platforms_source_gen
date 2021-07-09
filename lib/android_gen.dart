@@ -171,7 +171,7 @@ class JavaCreate {
       typeStr = baseType;
     } else {
       //other not base type
-      typeStr = property.type;
+      typeStr = property.type.split(".").last;
     }
     if (property.subType.isNotEmpty) {
       typeStr += "<";

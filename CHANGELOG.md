@@ -41,3 +41,7 @@
 ## 0.3.2
 
 * feat: add subType in property
+
+## 0.3.3
+
+* feat:  support custom class
