@@ -1,7 +1,7 @@
 class ClassInfo {
   ClassInfo();
   int type = -1; //0. normal class, 1: abstract class
-  String name;
+  String name = "";
 
   @override
   String toString() {

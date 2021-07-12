@@ -45,3 +45,7 @@
 ## 0.3.3
 
 * feat:  support custom class
+
+## 0.4.0
+
+* feat:  support null safe

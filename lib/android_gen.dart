@@ -34,7 +34,9 @@ class JavaCreate {
       //import
       List<String> imports = [
         "import java.util.ArrayList;\n",
-        "import java.util.HashMap;\n"
+        "import java.util.HashMap;\n",
+        "import org.jetbrains.annotations.NotNull;\n",
+        "import org.jetbrains.annotations.Nullable;\n",
       ];
       imports.addAll(value.imports);
       String importStr = imports
@@ -74,7 +76,7 @@ class JavaCreate {
       //   //java interface can't have any default value.
       //   defaultValue = "";
       // }
-      if (defaultValue == null || defaultValue == "null") {
+      if (defaultValue == "null") {
         //todo no way if the String == "null"; don't do it
         defaultValue = "";
       }
@@ -92,7 +94,7 @@ class JavaCreate {
             property.type == "dart.typed_data.Int64List" ||
             property.type == "dart.typed_data.Float64List") {
           defaultValue = " new " +
-              typeMap[property.type] +
+              (typeMap[property.type] ?? "") +
               "{ " +
               defaultValue.replaceAll('[', '').replaceAll(']', '') +
               " }";
@@ -116,20 +118,20 @@ class JavaCreate {
     print("file: $path \n create result: ${a.exitCode}");
   }
 
-  /// add import
-  static void _addObjectImport(RegExp exp, List<String> map, int index,
-      String packageName, List<String> imports) {
-    String str1 = "";
-    try {
-      str1 = exp.firstMatch(map[index]).group(0);
-      map[index] = "new " + map[index];
-    } catch (e) {}
-    String str2 =
-        "import $packageName.${str1.substring(0, str1.indexOf("("))};\n";
-    if (!imports.contains(str2)) {
-      imports.add(str2);
-    }
-  }
+  // /// add import
+  // static void _addObjectImport(RegExp exp, List<String> map, int index,
+  //     String packageName, List<String> imports) {
+  //   String str1 = "";
+  //   try {
+  //     str1 = exp.firstMatch(map[index]).group(0);
+  //     map[index] = "new " + map[index];
+  //   } catch (e) {}
+  //   String str2 =
+  //       "import $packageName.${str1.substring(0, str1.indexOf("("))};\n";
+  //   if (!imports.contains(str2)) {
+  //     imports.add(str2);
+  //   }
+  // }
 
   /// create method
   static String method(List<MethodInfo> methods) {
@@ -163,7 +165,11 @@ class JavaCreate {
 
   /// cover dart type to java type
   /// [wantAddPre] if true, it when add pre keywords, like: public static final .....
-  static String getTypeStr(Property property, {bool wantAddPre = false}) {
+  static String getTypeStr(
+    Property property, {
+    bool wantAddPre = false,
+    bool showNullTag = true,
+  }) {
     String typeStr;
     var baseType = typeMap[property.type];
     if (baseType != null) {
@@ -173,10 +179,13 @@ class JavaCreate {
       //other not base type
       typeStr = property.type.split(".").last;
     }
+    if (showNullTag && typeStr != "void") {
+      typeStr = (property.canBeNull ? " @Nullable " : " @NotNull ") + typeStr;
+    }
     if (property.subType.isNotEmpty) {
       typeStr += "<";
       property.subType.forEach((element) {
-        typeStr += getTypeStr(element) + ", ";
+        typeStr += getTypeStr(element, showNullTag: false) + ", ";
       });
       if (typeStr.endsWith(", ")) {
         //remove ", " ,because java method arg can't end with ", "

@@ -1,9 +1,9 @@
 import 'property_parse.dart';
 
 class MethodInfo {
-  String name;
+  String name = "";
   List<Property> args = [];
-  Property returnType;
+  Property returnType = Property();
   bool isAbstract = false;
 
   MethodInfo.fromJson(Map<String, dynamic> json) {
@@ -12,24 +12,20 @@ class MethodInfo {
     if (json['args'] != null) {
       args = [];
       json['args'].forEach((v) {
-        args.add(new Property.fromJson(v));
+        args.add(Property.fromJson(v));
       });
     }
     returnType = json['returnType'] != null
-        ? new Property.fromJson(json['returnType'])
-        : null;
+        ? Property.fromJson(json['returnType'])
+        : Property();
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = Map<String, dynamic>();
     data['name'] = this.name;
     data['isAbstract'] = this.isAbstract;
-    if (this.args != null) {
-      data['args'] = this.args.map((v) => v.toJson()).toList();
-    }
-    if (this.returnType != null) {
-      data['returnType'] = this.returnType.toJson();
-    }
+    data['args'] = this.args.map((v) => v.toJson()).toList();
+    data['returnType'] = this.returnType.toJson();
     return data;
   }
 

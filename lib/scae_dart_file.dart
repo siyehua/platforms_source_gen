@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
 import 'dart:mirrors';
 
 import 'package:platforms_source_gen/class_parse.dart';
@@ -5,6 +8,9 @@ import 'package:platforms_source_gen/method_parse.dart';
 
 import 'platforms_source_gen.dart';
 import 'property_parse.dart';
+
+List<String> fileContent = [];
+String tmpPath = "";
 
 List<GenClassBean> reflectStart(List<Type> types) {
   // print('reflectStart! $types');
@@ -15,15 +21,24 @@ List<GenClassBean> reflectStart(List<Type> types) {
 
     /// ready
     var classMirror = reflectClass(element);
-    MethodMirror constructorMethodMirror = classMirror.declarations.values
-        .firstWhere(
-            (element) => element is MethodMirror && element.isConstructor,
-            orElse: () => null);
-    InstanceMirror instanceMirror;
+    var path = classMirror.location?.sourceUri.path ?? "";
+
+    if (path.isNotEmpty && path != tmpPath) {
+      //read dart file content
+      var file = File(
+          "/Users/william/AndroidStudioProjects/platforms_source_gen/lib/example/example.dart");
+      fileContent = file.readAsLinesSync();
+      tmpPath = path;
+    }
+    MethodMirror? constructorMethodMirror;
+    constructorMethodMirror = classMirror.declarations.values.firstWhere(
+            (element) => element is MethodMirror && element.isConstructor)
+        as MethodMirror?;
+    InstanceMirror? instanceMirror;
     if (!classMirror.isAbstract) {
       try {
         instanceMirror = classMirror
-            .newInstance(constructorMethodMirror.constructorName, []);
+            .newInstance(constructorMethodMirror!.constructorName, []);
       } catch (e) {
         print(e);
         throw "can't found default constructor method, please remove other constructor method!";
@@ -46,25 +61,71 @@ List<GenClassBean> reflectStart(List<Type> types) {
         .where((element) => element is VariableMirror)
         .map((e) => e as VariableMirror)
         .toList();
-    allProperty
-        .addAll(findParameters(classMirror, instanceMirror, propertyList));
+    var propertyLocations = propertyList
+        .map((e) => e.location)
+        .skipWhile((value) => value == null)
+        .map((e) => e!)
+        .toList();
+    allProperty.addAll(findParameters(
+        classMirror, instanceMirror, propertyList, propertyLocations));
     genClass.properties = allProperty;
 
     ///set method
     var allMethod = <MethodInfo>[];
-    declarations.values
+    var methodList = declarations.values
         .where((element) => element is MethodMirror && !element.isConstructor)
         .map((e) => e as MethodMirror)
-        .forEach((element) {
+        .toList();
+    methodList.asMap().forEach((index, element) {
+      String methodLineStr = fileContent[element.location!.line - 1];
       var method = MethodInfo();
       allMethod.add(method);
 
       method.name = MirrorSystem.getName(element.simpleName);
       method.isAbstract = element.isAbstract;
-      method.args = findParameters(classMirror, null, element.parameters);
+      int argParamsStartIndex =
+          methodLineStr.indexOf(method.name) + method.name.length + 1;
+      element.parameters.forEach((param) {
+        var property = Property();
+        method.args.add(property);
+        var type = param.type;
+        property.type = MirrorSystem.getName(type.qualifiedName);
+        property.name = MirrorSystem.getName(param.simpleName);
+        String startStr = methodLineStr.substring(argParamsStartIndex);
+        int start = startStr.indexOf(property.type.split(".").last);
+        int end = startStr.indexOf(property.name, start);
+        if (methodLineStr[end - 2] == "?") {
+          property.canBeNull = true;
+        }
+        argParamsStartIndex += end + property.name.length;
+        startStr = startStr
+            .substring(start + property.type.split(".").last.length, end)
+            .trim();
+        if (startStr.endsWith("?")) {
+          startStr = startStr.substring(0, startStr.length - 1);
+        }
+        if (startStr.isEmpty) {
+          startStr = "<>";
+        }
+        startStr = startStr.replaceAll("<", "{").replaceAll(">", "}");
+        String newLineContent = checkParamsNull(startStr, 0, "");
+        Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
+        findTypeArguments(property, param.type.typeArguments, typeJson);
+      });
+
       var returnProperty = Property();
-      findTypeArguments(returnProperty, [element.returnType]);
+      String targetLineStr =
+          methodLineStr.split(method.name).first.replaceAll(" ", "");
+      if (targetLineStr.endsWith("?")) {
+        returnProperty.canBeNull = true;
+      }
+      targetLineStr = "<$targetLineStr>";
+      String jsonStr = targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
+      String newLineContent = checkParamsNull(jsonStr, 0, "");
+      Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
+      findTypeArguments(returnProperty, [element.returnType], typeJson);
       method.returnType = returnProperty.subType[0];
+      method.returnType.canBeNull = returnProperty.canBeNull;
     });
     genClass.methods = allMethod;
   });
@@ -74,15 +135,26 @@ List<GenClassBean> reflectStart(List<Type> types) {
   return genClassList;
 }
 
-List<Property> findParameters(ClassMirror classMirror,
-    InstanceMirror instanceMirror, List<VariableMirror> params) {
+int cutIndex = 0;
+
+List<Property> findParameters(
+    ClassMirror classMirror,
+    InstanceMirror? instanceMirror,
+    List<VariableMirror> params,
+    List<SourceLocation> locations) {
   var parameters = <Property>[];
-  params.forEach((value) {
+  cutIndex = 0;
+  params.asMap().forEach((index, value) {
     var property = Property();
     parameters.add(property);
     var type = value.type;
     property.type = MirrorSystem.getName(type.qualifiedName);
     property.name = MirrorSystem.getName(value.simpleName);
+    String targetLineStr = checkPropertyCanBeNull(
+      property,
+      locations,
+      index,
+    );
     if (value.isStatic) {
       InstanceMirror instanceMirror = classMirror.getField(value.simpleName);
       property.defaultValue1 = "${instanceMirror.reflectee}";
@@ -93,17 +165,131 @@ List<Property> findParameters(ClassMirror classMirror,
     property.isStatic = value.isStatic;
     property.isConst = value.isConst;
     property.isPrivate = value.isPrivate;
-    findTypeArguments(property, value.type.typeArguments);
+    String jsonStr = targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
+    String newLineContent = checkParamsNull(jsonStr, 0, "");
+    Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
+    findTypeArguments(property, value.type.typeArguments, typeJson);
   });
   return parameters;
 }
 
-void findTypeArguments(Property target, List<TypeMirror> typeArguments) {
-  typeArguments.toList().asMap().forEach((key, value) {
+String checkPropertyCanBeNull(
+    Property property, List<SourceLocation> locations, int index) {
+  String simpleType = property.type.split(".").last;
+  RegExp exp = RegExp("$simpleType.*${property.name}");
+  String targetLineContent = fileContent[locations[index].line - 1].trim();
+  var hasMatch = exp.hasMatch(targetLineContent);
+  // print(
+  //     "line: ${locations[index].line} \t\ttargetLineContent: $targetLineContent \t\t\ttype: $simpleType \tname:${property.name} \thasMatch:$hasMatch");
+  if (hasMatch) {
+    int end = exp.firstMatch(targetLineContent)!.end;
+    int nullIndex = end - property.name.length - 2;
+    bool canBeNull = targetLineContent.substring(nullIndex).startsWith("?");
+    property.canBeNull = canBeNull;
+    String result = targetLineContent
+        .substring(exp.firstMatch(targetLineContent)!.start + simpleType.length,
+            end - property.name.length)
+        .replaceAll(" ", "");
+    if (result.endsWith("?") && canBeNull) {
+      result = result.substring(0, result.length - 1);
+    }
+    if (result.isEmpty) {
+      result = "<>";
+    }
+    return result;
+  }
+  throw "can't parse class Property: $targetLineContent $property";
+}
+
+void findTypeArguments(Property target, List<TypeMirror> typeArguments,
+    Map<dynamic, dynamic> typeJson) {
+  List<MapEntry<dynamic, dynamic>> typeJsonList = [];
+  typeJson.forEach((key, value) {
+    typeJsonList.add(MapEntry(key, value));
+  });
+  if (typeJson.length < typeArguments.length) {
+    typeJsonList.add(typeJsonList.first);
+  }
+  typeArguments.asMap().forEach((index, value) {
     var property = Property();
     var typeArguments = MirrorSystem.getName(value.qualifiedName);
     property.type = typeArguments;
+    var valueJson = typeJsonList[index];
+    property.canBeNull = valueJson.key.contains("?");
     target.subType.add(property);
-    findTypeArguments(property, value.typeArguments);
+    findTypeArguments(property, value.typeArguments, valueJson.value);
   });
+}
+
+String checkParamsNull(String jsonStr, int startIndex, String subStr) {
+  //<List<String>, Map<String?, Map<int?, List<Map<String, int>>>>>
+  // String jsonStr = targetLineContent.replaceAll("<", "{").replaceAll(">", "}");
+
+  if (startIndex >= jsonStr.length) {
+    return jsonStr;
+  }
+  String startChar = jsonStr[startIndex];
+  // print("index:$index $char");
+
+  if (startChar == "{") {
+    if (subStr.isNotEmpty) {
+      int leftCount = 0;
+      bool hasAddQuestion = false;
+      for (int i = startIndex + 1; i < jsonStr.length - 1; i++) {
+        String char = jsonStr[i];
+        if (char == "}") {
+          if (leftCount == 0) {
+            try {
+              bool isQuestion = jsonStr[i + 1] == "?";
+              if (isQuestion) {
+                jsonStr = jsonStr.replaceRange(i + 1, i + 2, "");
+                subStr += "?";
+                hasAddQuestion = true;
+              }
+            } catch (e) {
+              //jsonStr[i + 1] max
+              // print(e);
+            }
+            //end
+            break;
+          } else {
+            leftCount--;
+          }
+        } else if (char == "{") {
+          leftCount++;
+        }
+      }
+      int start = startIndex - subStr.length;
+      if (hasAddQuestion) {
+        start++;
+      }
+      jsonStr = jsonStr.replaceRange(start, startIndex, '"$subStr":');
+      startIndex += 3;
+      if (hasAddQuestion) {
+        startIndex++;
+      }
+      subStr = "";
+    }
+  } else if (startChar == ",") {
+    if (subStr.isNotEmpty) {
+      jsonStr = jsonStr.replaceRange(
+        startIndex - subStr.length,
+        startIndex,
+        '"$subStr":{}',
+      );
+      startIndex += 5;
+      subStr = "";
+    }
+  } else if (startChar == "}") {
+    if (subStr.isNotEmpty) {
+      jsonStr = jsonStr.replaceRange(
+          startIndex - subStr.length, startIndex, '"$subStr":{}');
+      startIndex += 5;
+      subStr = "";
+    }
+  } else {
+    subStr += startChar;
+  }
+  startIndex++;
+  return checkParamsNull(jsonStr, startIndex, subStr);
 }

@@ -6,6 +6,7 @@ class Property {
   bool isConst = false;
   bool isFinal = false;
   bool isPrivate = false;
+  bool canBeNull = false;
   List<Property> subType = []; //sub type, for example: list ,  map , Future
 
   Property.fromJson(Map<String, dynamic> json) {
@@ -17,6 +18,7 @@ class Property {
     isConst = json['isConst'];
     isFinal = json['isFinal'];
     isPrivate = json['isPrivate'];
+    canBeNull = json['canBeNull'];
     if (json['subType'] != null) {
       subType = [];
       json['subType'].forEach((v) {
@@ -35,9 +37,8 @@ class Property {
     data['isConst'] = this.isConst;
     data['isFinal'] = this.isFinal;
     data['isPrivate'] = this.isPrivate;
-    if (this.subType != null) {
-      data['subType'] = this.subType.map((v) => v.toJson()).toList();
-    }
+    data['canBeNull'] = this.canBeNull;
+    data['subType'] = this.subType.map((v) => v.toJson()).toList();
     return data;
   }
 
@@ -51,6 +52,7 @@ class Property {
                 "isConst": $isConst, 
                 "isFinal": $isFinal, 
                 "isPrivate": $isPrivate, 
+                "subType": $subType, 
                 "subType": $subType, 
               }""";
   }

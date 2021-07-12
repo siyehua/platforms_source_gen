@@ -10,7 +10,7 @@ import 'property_parse.dart';
 
 class GenClassBean {
   String path = "";
-  ClassInfo classInfo;
+  ClassInfo classInfo = ClassInfo();
   List<String> imports = [];
   List<MethodInfo> methods = [];
   List<Property> properties = [];
@@ -79,7 +79,11 @@ Future<List<GenClassBean>> platforms_source_gen_init(
   // String androidSavePath = "./Android_gen";
   List<GenClassBean> list = [];
   Directory directory = Directory(dir);
-  var listFile = directory.listSync();
+  var listFile = directory
+      .listSync()
+      .takeWhile((value) => value is File)
+      .map((e) => e as File)
+      .toList();
 
   for (int i = 0; i < listFile.length; i++) {
     if (listFile[i] is File) {
@@ -117,6 +121,10 @@ Future<List<GenClassBean>> _parseFile(
         //   _formatLine(str, genClassBean);
       } else if (classResult == 2) {
         print("class end:${classInfo.name}");
+        if(classInfo.name.isEmpty || classInfo.type == -1) {
+          //skip
+          return ;
+        }
         genClassBean.classInfo = classInfo;
         genClassBeans.add(genClassBean);
 
