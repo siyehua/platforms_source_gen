@@ -143,7 +143,7 @@ void main() { var typeList =<Type>[];\n""";
     typeList.add(type${element.classInfo.name});""";
   });
   allContent += """\n  
-  List<GenClassBean> genClassBeans = reflectStart(typeList);
+  List<GenClassBean> genClassBeans = reflectStart(typeList, '${file.absolute.path}');
   String a = jsonEncode(genClassBeans);
   print(a);
 
@@ -151,6 +151,7 @@ void main() { var typeList =<Type>[];\n""";
   sanceFile.writeAsStringSync(allContent);
   ProcessResult result =
       await Process.run('dart', ['run', sanceFile.path], runInShell: true);
+  print(file.absolute.path);
   sanceFile.deleteSync();
   // reflectStart(types)
   print(result.exitCode);

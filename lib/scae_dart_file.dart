@@ -12,7 +12,7 @@ import 'property_parse.dart';
 List<String> fileContent = [];
 String tmpPath = "";
 
-List<GenClassBean> reflectStart(List<Type> types) {
+List<GenClassBean> reflectStart(List<Type> types, String path) {
   // print('reflectStart! $types');
   var genClassList = <GenClassBean>[];
   types.forEach((element) {
@@ -21,12 +21,10 @@ List<GenClassBean> reflectStart(List<Type> types) {
 
     /// ready
     var classMirror = reflectClass(element);
-    var path = classMirror.location?.sourceUri.path ?? "";
 
     if (path.isNotEmpty && path != tmpPath) {
       //read dart file content
-      var file = File(
-          "/Users/william/AndroidStudioProjects/platforms_source_gen/lib/example/example.dart");
+      var file = File(path);
       fileContent = file.readAsLinesSync();
       tmpPath = path;
     }
@@ -94,14 +92,13 @@ List<GenClassBean> reflectStart(List<Type> types) {
         String startStr = methodLineStr.substring(argParamsStartIndex);
         int start = startStr.indexOf(property.type.split(".").last);
         int end = startStr.indexOf(" " + property.name, start) + 1;
-        if (methodLineStr[end - 2] == "?") {
-          property.canBeNull = true;
-        }
+
         argParamsStartIndex += end + property.name.length;
         startStr = startStr
             .substring(start + property.type.split(".").last.length, end)
             .trim();
         if (startStr.endsWith("?")) {
+          property.canBeNull = true;
           startStr = startStr.substring(0, startStr.length - 1);
         }
         if (startStr.isEmpty) {

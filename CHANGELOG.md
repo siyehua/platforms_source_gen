@@ -53,3 +53,7 @@
 ## 0.4.1
 
 * fix: some type parse error
+
+## 0.4.2
+
+* fix: parse file is hard code
