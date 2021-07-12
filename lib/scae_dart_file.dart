@@ -93,7 +93,7 @@ List<GenClassBean> reflectStart(List<Type> types) {
         property.name = MirrorSystem.getName(param.simpleName);
         String startStr = methodLineStr.substring(argParamsStartIndex);
         int start = startStr.indexOf(property.type.split(".").last);
-        int end = startStr.indexOf(property.name, start);
+        int end = startStr.indexOf(" " + property.name, start) + 1;
         if (methodLineStr[end - 2] == "?") {
           property.canBeNull = true;
         }
@@ -176,19 +176,19 @@ List<Property> findParameters(
 String checkPropertyCanBeNull(
     Property property, List<SourceLocation> locations, int index) {
   String simpleType = property.type.split(".").last;
-  RegExp exp = RegExp("$simpleType.*${property.name}");
+
+  // RegExp exp = RegExp("$simpleType.*${property.name}");
   String targetLineContent = fileContent[locations[index].line - 1].trim();
-  var hasMatch = exp.hasMatch(targetLineContent);
+  int start = targetLineContent.indexOf(simpleType);
+  int end = targetLineContent.lastIndexOf(" " + property.name) + 1;
   // print(
   //     "line: ${locations[index].line} \t\ttargetLineContent: $targetLineContent \t\t\ttype: $simpleType \tname:${property.name} \thasMatch:$hasMatch");
-  if (hasMatch) {
-    int end = exp.firstMatch(targetLineContent)!.end;
-    int nullIndex = end - property.name.length - 2;
+  if (start != -1 && end != -1) {
+    int nullIndex = end - 2;
     bool canBeNull = targetLineContent.substring(nullIndex).startsWith("?");
     property.canBeNull = canBeNull;
     String result = targetLineContent
-        .substring(exp.firstMatch(targetLineContent)!.start + simpleType.length,
-            end - property.name.length)
+        .substring(start + simpleType.length, end)
         .replaceAll(" ", "");
     if (result.endsWith("?") && canBeNull) {
       result = result.substring(0, result.length - 1);

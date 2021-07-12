@@ -42,15 +42,9 @@ class GenClassBean {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['path'] = this.path;
     data['classInfo'] = this.classInfo.toJson();
-    if (this.imports != null) {
-      data['imports'] = this.imports.toList();
-    }
-    if (this.methods != null) {
-      data['methods'] = this.methods.map((v) => v.toJson()).toList();
-    }
-    if (this.properties != null) {
-      data['properties'] = this.properties.map((v) => v.toJson()).toList();
-    }
+    data['imports'] = this.imports.toList();
+    data['methods'] = this.methods.map((v) => v.toJson()).toList();
+    data['properties'] = this.properties.map((v) => v.toJson()).toList();
     return data;
   }
 

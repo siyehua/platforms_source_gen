@@ -49,3 +49,7 @@
 ## 0.4.0
 
 * feat:  support null safe
+
+## 0.4.1
+
+* fix: some type parse error
