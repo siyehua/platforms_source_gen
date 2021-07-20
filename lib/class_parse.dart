@@ -1,5 +1,6 @@
 class ClassInfo {
   ClassInfo();
+  bool hasDefaultConstructor = false;
   int type = -1; //0. normal class, 1: abstract class
   String name = "";
 
@@ -11,12 +12,14 @@ class ClassInfo {
   ClassInfo.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     type = json['type'];
+    hasDefaultConstructor = json['hasDefaultConstructor'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['name'] = this.name;
     data['type'] = this.type;
+    data['hasDefaultConstructor'] = this.hasDefaultConstructor;
     return data;
   }
 }

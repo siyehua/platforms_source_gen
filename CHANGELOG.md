@@ -57,3 +57,7 @@
 ## 0.4.2
 
 * fix: parse file is hard code
+
+## 0.4.3
+
+* fix: class no import info

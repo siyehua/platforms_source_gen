@@ -5,7 +5,7 @@ abstract class IAccount {
 
   void logout();
 
-  Future<List<String>?> getList();
+  Future<List<String>?> getList(String? name, String password, String? name2, String password3, String? namefe, String passwordeff);
 
   Future<Map<String?, int>> getMap();
 

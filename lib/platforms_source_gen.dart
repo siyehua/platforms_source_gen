@@ -115,11 +115,12 @@ Future<List<GenClassBean>> _parseFile(
         //   _formatLine(str, genClassBean);
       } else if (classResult == 2) {
         print("class end:${classInfo.name}");
-        if(classInfo.name.isEmpty || classInfo.type == -1) {
+        if (classInfo.name.isEmpty || classInfo.type == -1) {
           //skip
-          return ;
+          return;
         }
         genClassBean.classInfo = classInfo;
+        genClassBean.imports = importList;
         genClassBeans.add(genClassBean);
 
         //clear tmp class info
@@ -129,11 +130,11 @@ Future<List<GenClassBean>> _parseFile(
       }
     }
   });
-  File sanceFile = File(file.parent.path + "/tmp.dart");
+  File scanFile = File(file.parent.path + "/tmp.dart");
   String allContent = """
 import 'dart:convert';
 import 'package:platforms_source_gen/platforms_source_gen.dart';
-import 'package:platforms_source_gen/scae_dart_file.dart';
+import 'package:platforms_source_gen/scan_dart_file.dart';
 import '${file.path.split('/').last}';
 
 void main() { var typeList =<Type>[];\n""";
@@ -148,17 +149,22 @@ void main() { var typeList =<Type>[];\n""";
   print(a);
 
 }""";
-  sanceFile.writeAsStringSync(allContent);
+  scanFile.writeAsStringSync(allContent);
+  await Process.run('dart', ['format', '-l', '80000', scanFile.path],
+      runInShell: true);
   ProcessResult result =
-      await Process.run('dart', ['run', sanceFile.path], runInShell: true);
+      await Process.run('dart', ['run', scanFile.path], runInShell: true);
   print(file.absolute.path);
-  sanceFile.deleteSync();
+  scanFile.deleteSync();
   // reflectStart(types)
   print(result.exitCode);
   print(result.stderr);
   List<dynamic> b = jsonDecode(result.stdout);
   List<GenClassBean> newList =
       List.from(b).map((e) => GenClassBean.fromJson(e)).toList();
+  genClassBeans.asMap().forEach((key, value) {
+    newList[key].imports = value.imports;
+  });
   return newList;
 }
 
@@ -176,20 +182,4 @@ bool _foundImport(String str, List<String> importList) {
     return true;
   }
   return false;
-}
-
-String tmpLineStr = "";
-
-List<String> ccc(List<String> data) {
-  var a1 = <String>[];
-  data.forEach((element) async {
-    a1.add(await aaa());
-  });
-  return a1;
-}
-
-Future<String> aaa() async {
-  return Future.delayed(Duration.zero, () {
-    return "fefe";
-  });
 }

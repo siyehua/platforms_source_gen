@@ -1,10 +1,12 @@
 
+import 'package:platforms_source_gen/example/example.dart';
+
 abstract class Fps {
   Future<String> getPageName(int a);
 
   Future<double> getFps();
 
-  void add11(int b);
+  void add11(int b, MyClass cls);
 
 }
 

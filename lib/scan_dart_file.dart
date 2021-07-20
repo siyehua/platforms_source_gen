@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:mirrors';
 
 import 'package:platforms_source_gen/class_parse.dart';
@@ -13,7 +12,6 @@ List<String> fileContent = [];
 String tmpPath = "";
 
 List<GenClassBean> reflectStart(List<Type> types, String path) {
-  // print('reflectStart! $types');
   var genClassList = <GenClassBean>[];
   types.forEach((element) {
     var genClass = GenClassBean();
@@ -61,7 +59,7 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
         .toList();
     var propertyLocations = propertyList
         .map((e) => e.location)
-        .skipWhile((value) => value == null)
+        .where((value) => value != null)
         .map((e) => e!)
         .toList();
     allProperty.addAll(findParameters(
