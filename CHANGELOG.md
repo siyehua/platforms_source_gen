@@ -61,3 +61,7 @@
 ## 0.4.3
 
 * fix: class no import info
+
+## 0.5.0
+
+* feat: null safe option

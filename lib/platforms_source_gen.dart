@@ -4,9 +4,20 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'android_gen.dart';
-import 'class_parse.dart';
-import 'method_parse.dart';
-import 'property_parse.dart';
+import 'bean/class_parse.dart';
+import 'bean/method_parse.dart';
+import 'bean/property_parse.dart';
+
+void main() async {
+  List<GenClassBean> genClassBeans = await platforms_source_gen_init(
+      "./lib/example", //you dart file path
+      "com.siyehua.example", //your android's  java class package name
+      "./Android_gen" //your android file save path
+      );
+  platforms_source_gent_start(
+      "com.siyehua.example", "./Android_gen", genClassBeans,
+      nullSafe: true);
+}
 
 class GenClassBean {
   String path = "";
@@ -56,16 +67,6 @@ class GenClassBean {
   GenClassBean();
 }
 
-void main() async {
-  List<GenClassBean> genClassBeans = await platforms_source_gen_init(
-      "./lib/example", //you dart file path
-      "com.siyehua.example", //your android's  java class package name
-      "./Android_gen" //your android file save path
-      );
-  platforms_source_gent_start(
-      "com.siyehua.example", "./Android_gen", genClassBeans);
-}
-
 Future<List<GenClassBean>> platforms_source_gen_init(
     String dir, String javaPackage, String androidSavePath) async {
   // String path = "./lib/example";
@@ -86,13 +87,17 @@ Future<List<GenClassBean>> platforms_source_gen_init(
       list.addAll(aaa);
     }
   }
-  ;
   return list;
 }
 
 platforms_source_gent_start(String javaPackage, String androidSavePath,
-    List<GenClassBean> genClassBeans) {
-  JavaCreate.create(javaPackage, androidSavePath, genClassBeans);
+    List<GenClassBean> genClassBeans,
+    {bool nullSafe = true}) {
+  //android create
+  JavaCreate.create(javaPackage, androidSavePath, genClassBeans,
+      nullSafe: nullSafe);
+  //ios create
+  //todo
 }
 
 Future<List<GenClassBean>> _parseFile(
@@ -110,9 +115,6 @@ Future<List<GenClassBean>> _parseFile(
       ClassInfo classInfo = getClassInfo();
       if (classResult == 1) {
         print("class start:${classInfo.name}");
-        // } else if (classResult == 0 && classInfo.type != -1) {
-        //   //check property or method
-        //   _formatLine(str, genClassBean);
       } else if (classResult == 2) {
         print("class end:${classInfo.name}");
         if (classInfo.name.isEmpty || classInfo.type == -1) {
@@ -130,14 +132,27 @@ Future<List<GenClassBean>> _parseFile(
       }
     }
   });
+  List b = await _scan_dart_file_use_shell(file, genClassBeans);
+  List<GenClassBean> newList =
+      List.from(b).map((e) => GenClassBean.fromJson(e)).toList();
+  genClassBeans.asMap().forEach((key, value) {
+    newList[key].imports = value.imports;
+  });
+  return newList;
+}
+
+/// scan dart file use shell
+/// todo support windows cmd
+Future<List> _scan_dart_file_use_shell(
+    File file, List<GenClassBean> genClassBeans) async {
   File scanFile = File(file.parent.path + "/tmp.dart");
   String allContent = """
-import 'dart:convert';
-import 'package:platforms_source_gen/platforms_source_gen.dart';
-import 'package:platforms_source_gen/scan_dart_file.dart';
-import '${file.path.split('/').last}';
-
-void main() { var typeList =<Type>[];\n""";
+  import 'dart:convert';
+  import 'package:platforms_source_gen/platforms_source_gen.dart';
+  import 'package:platforms_source_gen/scan_dart_file.dart';
+  import '${file.path.split('/').last}';
+  
+  void main() { var typeList =<Type>[];\n""";
   genClassBeans.forEach((element) {
     allContent += """\n
     Type type${element.classInfo.name} = ${element.classInfo.name};
@@ -147,8 +162,7 @@ void main() { var typeList =<Type>[];\n""";
   List<GenClassBean> genClassBeans = reflectStart(typeList, '${file.absolute.path}');
   String a = jsonEncode(genClassBeans);
   print(a);
-
-}""";
+  }""";
   scanFile.writeAsStringSync(allContent);
   await Process.run('dart', ['format', '-l', '80000', scanFile.path],
       runInShell: true);
@@ -160,12 +174,7 @@ void main() { var typeList =<Type>[];\n""";
   print(result.exitCode);
   print(result.stderr);
   List<dynamic> b = jsonDecode(result.stdout);
-  List<GenClassBean> newList =
-      List.from(b).map((e) => GenClassBean.fromJson(e)).toList();
-  genClassBeans.asMap().forEach((key, value) {
-    newList[key].imports = value.imports;
-  });
-  return newList;
+  return b;
 }
 
 String _checkLineStr(String str) {
