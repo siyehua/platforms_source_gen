@@ -21,6 +21,7 @@ class ObjectiveCCreate {
     "dart.typed_data.Float64List": "NSArray",
     "dart.core.List": "NSArray",
     "dart.core.Map": "NSDictionary",
+    "number": "NSNumber",
     "void": "void",
   };
   static const Map<String, String> specialTypeMap = {
@@ -53,8 +54,6 @@ class ObjectiveCCreate {
       List<String> imports = [
         "#import <Foundation/Foundation.h>\n",
       ];
-      imports
-          .addAll(value.imports.where((element) => !element.contains(".dart")));
       String importStr = imports
           .toString()
           .replaceAll("[", "")
@@ -62,10 +61,11 @@ class ObjectiveCCreate {
           .replaceAll(",", "");
 
       allContent += "${importStr}";
+      allContent += getCustomClassImport(value.properties);
       allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
 
       //property
-      String propertyStr = property(value, value.properties);
+      String propertyStr = property(value.properties);
 
       //method
       String methodStr = method(value.methods);
@@ -93,7 +93,7 @@ class ObjectiveCCreate {
       allContent += "@implementation $className";
 
       //property
-      allContent += propertyImplementation(value, value.properties);
+      allContent += propertyImplementation(value.properties);
 
       //method
       allContent += methodImplementation(value.methods);
@@ -108,7 +108,7 @@ class ObjectiveCCreate {
   }
 
   /// create property
-  static String property(GenClassBean genBean, List<Property> properties) {
+  static String property(List<Property> properties) {
     String propertyStr = "";
     properties.forEach((property) {
       String typeStr = getPropertyStr(property);
@@ -139,8 +139,7 @@ class ObjectiveCCreate {
     return result;
   }
 
-  static String propertyImplementation(
-      GenClassBean genBean, List<Property> properties) {
+  static String propertyImplementation(List<Property> properties) {
     String propertyStr =
         "\n- (instancetype)init\n{\n\tself = [super init];\n\tif (self) {\n";
     properties.forEach((property) {
@@ -189,6 +188,25 @@ class ObjectiveCCreate {
     return result;
   }
 
+  static String getCustomClassImport(List<Property> properties) {
+    String importString = "";
+    Set<String> customClassTypes = Set();
+    properties.forEach((value) {
+      String typeString = getTypeString(value);
+      typeString = typeString.replaceAll(" *", "");
+      typeString = typeString.replaceAll("<", ", ");
+      typeString = typeString.replaceAll(">", "");
+      customClassTypes.addAll(typeString.split(", "));
+    });
+    customClassTypes.forEach((element) {
+      if (!baseTypeMap.values.contains(element) &&
+          !classTypeMap.values.contains(element)) {
+        importString += "#import \"$element.h\"\n";
+      }
+    });
+    return importString;
+  }
+
   /// cover dart type to objc type
   static String getPropertyStr(
     Property property, {
@@ -211,7 +229,7 @@ class ObjectiveCCreate {
       }
       propertyString += " *";
     } else {
-      //other not base type
+      // custom class
       propertyString = "${property.type.split(".").last} *";
     }
     return propertyString;
