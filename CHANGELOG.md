@@ -65,3 +65,7 @@
 ## 0.5.0
 
 * feat: null safe option
+
+## 0.5.1
+
+* feat: format source code

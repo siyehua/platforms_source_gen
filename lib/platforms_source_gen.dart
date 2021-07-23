@@ -164,7 +164,7 @@ Future<List> _scan_dart_file_use_shell(
   print(a);
   }""";
   scanFile.writeAsStringSync(allContent);
-  await Process.run('dart', ['format', '-l', '80000', scanFile.path],
+  await Process.run('dart', ['format', '-l', '80000', file.path],
       runInShell: true);
   ProcessResult result =
       await Process.run('dart', ['run', scanFile.path], runInShell: true);
