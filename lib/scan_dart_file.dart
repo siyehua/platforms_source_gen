@@ -2,15 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:mirrors';
 
-import 'package:platforms_source_gen/class_parse.dart';
-import 'package:platforms_source_gen/method_parse.dart';
 
+import 'bean/class_parse.dart';
+import 'bean/method_parse.dart';
 import 'platforms_source_gen.dart';
-import 'property_parse.dart';
+import 'bean/property_parse.dart';
 
 List<String> fileContent = [];
 String tmpPath = "";
 
+/// reflect class and parse it
 List<GenClassBean> reflectStart(List<Type> types, String path) {
   var genClassList = <GenClassBean>[];
   types.forEach((element) {
@@ -62,7 +63,7 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
         .where((value) => value != null)
         .map((e) => e!)
         .toList();
-    allProperty.addAll(findParameters(
+    allProperty.addAll(_parsePropertyTypes(
         classMirror, instanceMirror, propertyList, propertyLocations));
     genClass.properties = allProperty;
 
@@ -103,9 +104,9 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
           startStr = "<>";
         }
         startStr = startStr.replaceAll("<", "{").replaceAll(">", "}");
-        String newLineContent = checkParamsNull(startStr, 0, "");
+        String newLineContent = _formatTypeStr2JsonStr(startStr, 0, "");
         Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
-        findTypeArguments(property, param.type.typeArguments, typeJson);
+        _findMethodArgumentsType(property, param.type.typeArguments, typeJson);
       });
 
       var returnProperty = Property();
@@ -116,9 +117,9 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
       }
       targetLineStr = "<$targetLineStr>";
       String jsonStr = targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
-      String newLineContent = checkParamsNull(jsonStr, 0, "");
+      String newLineContent = _formatTypeStr2JsonStr(jsonStr, 0, "");
       Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
-      findTypeArguments(returnProperty, [element.returnType], typeJson);
+      _findMethodArgumentsType(returnProperty, [element.returnType], typeJson);
       method.returnType = returnProperty.subType[0];
       method.returnType.canBeNull = returnProperty.canBeNull;
     });
@@ -130,22 +131,20 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
   return genClassList;
 }
 
-int cutIndex = 0;
-
-List<Property> findParameters(
+/// parse property types
+List<Property> _parsePropertyTypes(
     ClassMirror classMirror,
     InstanceMirror? instanceMirror,
     List<VariableMirror> params,
     List<SourceLocation> locations) {
   var parameters = <Property>[];
-  cutIndex = 0;
   params.asMap().forEach((index, value) {
     var property = Property();
     parameters.add(property);
     var type = value.type;
     property.type = MirrorSystem.getName(type.qualifiedName);
     property.name = MirrorSystem.getName(value.simpleName);
-    String targetLineStr = checkPropertyCanBeNull(
+    String targetLineStr = _checkPropertyCanBeNull(
       property,
       locations,
       index,
@@ -161,14 +160,15 @@ List<Property> findParameters(
     property.isConst = value.isConst;
     property.isPrivate = value.isPrivate;
     String jsonStr = targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
-    String newLineContent = checkParamsNull(jsonStr, 0, "");
+    String newLineContent = _formatTypeStr2JsonStr(jsonStr, 0, "");
     Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
-    findTypeArguments(property, value.type.typeArguments, typeJson);
+    _findMethodArgumentsType(property, value.type.typeArguments, typeJson);
   });
   return parameters;
 }
 
-String checkPropertyCanBeNull(
+/// parse property can be null
+String _checkPropertyCanBeNull(
     Property property, List<SourceLocation> locations, int index) {
   String simpleType = property.type.split(".").last;
 
@@ -196,7 +196,8 @@ String checkPropertyCanBeNull(
   throw "can't parse class Property: $targetLineContent $property";
 }
 
-void findTypeArguments(Property target, List<TypeMirror> typeArguments,
+/// parse method's args type and nullSafe
+void _findMethodArgumentsType(Property target, List<TypeMirror> typeArguments,
     Map<dynamic, dynamic> typeJson) {
   List<MapEntry<dynamic, dynamic>> typeJsonList = [];
   typeJson.forEach((key, value) {
@@ -212,11 +213,12 @@ void findTypeArguments(Property target, List<TypeMirror> typeArguments,
     var valueJson = typeJsonList[index];
     property.canBeNull = valueJson.key.contains("?");
     target.subType.add(property);
-    findTypeArguments(property, value.typeArguments, valueJson.value);
+    _findMethodArgumentsType(property, value.typeArguments, valueJson.value);
   });
 }
 
-String checkParamsNull(String jsonStr, int startIndex, String subStr) {
+/// format type str to json str
+String _formatTypeStr2JsonStr(String jsonStr, int startIndex, String subStr) {
   //<List<String>, Map<String?, Map<int?, List<Map<String, int>>>>>
   // String jsonStr = targetLineContent.replaceAll("<", "{").replaceAll(">", "}");
 
@@ -286,5 +288,5 @@ String checkParamsNull(String jsonStr, int startIndex, String subStr) {
     subStr += startChar;
   }
   startIndex++;
-  return checkParamsNull(jsonStr, startIndex, subStr);
+  return _formatTypeStr2JsonStr(jsonStr, startIndex, subStr);
 }

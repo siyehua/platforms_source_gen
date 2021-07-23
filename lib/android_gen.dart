@@ -1,25 +1,16 @@
 import 'dart:io';
 
-import 'method_parse.dart';
+import 'bean/method_parse.dart';
+import 'gen_file_edit.dart';
 import 'platforms_source_gen.dart';
-import 'property_parse.dart';
+import 'bean/property_parse.dart';
+import 'type_utils.dart';
 
+/// Java file create
 class JavaCreate {
-  static const Map<String, String> typeMap = {
-    "dart.core.bool": "Boolean",
-    "dart.core.int": "Long",
-    "dart.core.double": "Double",
-    "dart.core.String": "String",
-    "dart.typed_data.Uint8List": "byte[]",
-    "dart.typed_data.Int32List": "int[]",
-    "dart.typed_data.Int64List": "long[]",
-    "dart.typed_data.Float64List": "double[]",
-    "dart.core.List": "ArrayList",
-    "dart.core.Map": "HashMap",
-  };
-
   static void create(
-      String packageName, String savePath, List<GenClassBean> genClassBeans) {
+      String packageName, String savePath, List<GenClassBean> genClassBeans,
+      {bool nullSafe = true}) {
     Directory androidTargetDir = Directory(savePath);
     bool exists = androidTargetDir.existsSync();
     if (!exists) {
@@ -38,7 +29,7 @@ class JavaCreate {
         "import org.jetbrains.annotations.NotNull;\n",
         "import org.jetbrains.annotations.Nullable;\n",
       ];
-      imports.addAll(value.imports);
+      imports.addAll(value.imports.where((element) => !element.contains(".dart")));
       String importStr = imports
           .toString()
           .replaceAll("[", "")
@@ -57,6 +48,9 @@ class JavaCreate {
       }
       allContent +=
           "${importStr}public ${absStr} ${value.classInfo.name} {\n$propertyStr ${methodStr} \n}";
+      if (!nullSafe) {
+        allContent = GenFileEdit.removeJavaNullSafe(allContent);
+      }
       javaFile.writeAsStringSync(allContent);
       if (!javaFile.existsSync()) {
         //if not create use dart io, use shell
@@ -94,7 +88,7 @@ class JavaCreate {
             property.type == "dart.typed_data.Int64List" ||
             property.type == "dart.typed_data.Float64List") {
           defaultValue = " new " +
-              (typeMap[property.type] ?? "") +
+              (TypeUtils.javaMap[property.type] ?? "") +
               "{ " +
               defaultValue.replaceAll('[', '').replaceAll(']', '') +
               " }";
@@ -117,21 +111,6 @@ class JavaCreate {
         runInShell: true);
     print("file: $path \n create result: ${a.exitCode}");
   }
-
-  // /// add import
-  // static void _addObjectImport(RegExp exp, List<String> map, int index,
-  //     String packageName, List<String> imports) {
-  //   String str1 = "";
-  //   try {
-  //     str1 = exp.firstMatch(map[index]).group(0);
-  //     map[index] = "new " + map[index];
-  //   } catch (e) {}
-  //   String str2 =
-  //       "import $packageName.${str1.substring(0, str1.indexOf("("))};\n";
-  //   if (!imports.contains(str2)) {
-  //     imports.add(str2);
-  //   }
-  // }
 
   /// create method
   static String method(List<MethodInfo> methods) {
@@ -171,7 +150,7 @@ class JavaCreate {
     bool showNullTag = true,
   }) {
     String typeStr;
-    var baseType = typeMap[property.type];
+    var baseType = TypeUtils.javaMap[property.type];
     if (baseType != null) {
       //base
       typeStr = baseType;
