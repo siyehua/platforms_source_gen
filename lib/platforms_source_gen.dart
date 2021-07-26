@@ -3,6 +3,7 @@ library platforms_source_gen;
 import 'dart:convert';
 import 'dart:io';
 
+import 'ios_gen.dart';
 import 'android_gen.dart';
 import 'bean/class_parse.dart';
 import 'bean/method_parse.dart';
@@ -17,6 +18,7 @@ void main() async {
   platforms_source_gent_start(
       "com.siyehua.example", "./Android_gen", genClassBeans,
       nullSafe: true);
+  genIOSCode("MQQFlutterGen_", "./iOS_gen", genClassBeans);
 }
 
 class GenClassBean {
@@ -98,6 +100,12 @@ platforms_source_gent_start(String javaPackage, String androidSavePath,
       nullSafe: nullSafe);
   //ios create
   //todo
+}
+
+void genIOSCode(
+    String projectPrefix, String iOSSavePath, List<GenClassBean> genClassBeans,
+    {bool nullSafe = true}) {
+  ObjectiveCCreate.create(projectPrefix, iOSSavePath, genClassBeans);
 }
 
 Future<List<GenClassBean>> _parseFile(
