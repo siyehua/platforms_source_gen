@@ -18,7 +18,6 @@ void main() async {
   platforms_source_gent_start(
       "com.siyehua.example", "./Android_gen", genClassBeans,
       nullSafe: true);
-  genIOSCode("MQQFlutterGen_", "./iOS_gen", genClassBeans);
 }
 
 class GenClassBean {
@@ -99,7 +98,7 @@ platforms_source_gent_start(String javaPackage, String androidSavePath,
   JavaCreate.create(javaPackage, androidSavePath, genClassBeans,
       nullSafe: nullSafe);
   //ios create
-  //todo
+  genIOSCode("MQQFlutterGen_", "./iOS_gen", genClassBeans, nullSafe: nullSafe);
 }
 
 void genIOSCode(
