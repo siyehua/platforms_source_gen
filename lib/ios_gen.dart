@@ -32,6 +32,9 @@ class ObjectiveCCreate {
 
   static void create(
       String projectPrefix, String savePath, List<GenClassBean> genClassBeans) {
+    if (projectPrefix.isEmpty) {
+      projectPrefix = "PSG"; // platforms source generator
+    }
     createHeaderFile(projectPrefix, savePath, genClassBeans);
     createImplementFile(projectPrefix, savePath, genClassBeans);
   }
@@ -70,9 +73,18 @@ class ObjectiveCCreate {
       //method
       String methodStr = method(value.methods);
 
-      String absStr = "\n@interface";
+      String defineString = "\n";
+      String defineSuffixString = "";
+      if (haveAbstractMethods(value)) {
+        defineString += "@protocol";
+        defineSuffixString = "<NSObject>\n@optional";
+      } else {
+        defineString += "@interface";
+        defineSuffixString = ": NSObject";
+      }
+      allContent += "${defineString} ${projectPrefix}${value.classInfo.name}";
       allContent +=
-          "${absStr} ${projectPrefix}${value.classInfo.name} : NSObject \n\n$propertyStr\n${methodStr}\nNS_ASSUME_NONNULL_END";
+          " $defineSuffixString\n\n$propertyStr\n${methodStr}\n@end\nNS_ASSUME_NONNULL_END";
       ocHeaderFile.writeAsStringSync(allContent);
       if (!ocHeaderFile.existsSync()) {
         //if not create use dart io, use shell
@@ -84,25 +96,27 @@ class ObjectiveCCreate {
   static void createImplementFile(
       String projectPrefix, String savePath, List<GenClassBean> genClassBeans) {
     genClassBeans.forEach((value) {
-      File ocImplementFile =
-          File(savePath + "/" + projectPrefix + value.classInfo.name + ".m");
-      //package
-      String className = "${projectPrefix}${value.classInfo.name}";
-      String allContent = "#import \"$className.h\"\n";
-      allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
-      allContent += "@implementation $className";
+      if (!haveAbstractMethods(value)) {
+        File ocImplementFile =
+            File(savePath + "/" + projectPrefix + value.classInfo.name + ".m");
+        //package
+        String className = "${projectPrefix}${value.classInfo.name}";
+        String allContent = "#import \"$className.h\"\n";
+        allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
+        allContent += "@implementation $className";
 
-      //property
-      allContent += propertyImplementation(value.properties);
+        //property
+        allContent += propertyImplementation(value.properties);
 
-      //method
-      allContent += methodImplementation(value.methods);
+        //method
+        allContent += methodImplementation(value.methods);
 
-      allContent += "\n@end\nNS_ASSUME_NONNULL_END";
-      ocImplementFile.writeAsStringSync(allContent);
-      if (!ocImplementFile.existsSync()) {
-        //if not create use dart io, use shell
-        _savePath(allContent, ocImplementFile.path);
+        allContent += "\n@end\nNS_ASSUME_NONNULL_END";
+        ocImplementFile.writeAsStringSync(allContent);
+        if (!ocImplementFile.existsSync()) {
+          //if not create use dart io, use shell
+          _savePath(allContent, ocImplementFile.path);
+        }
       }
     });
   }
@@ -139,6 +153,10 @@ class ObjectiveCCreate {
     return result;
   }
 
+  static bool haveAbstractMethods(GenClassBean classBean) {
+    return classBean.methods.isNotEmpty;
+  }
+
   static String propertyImplementation(List<Property> properties) {
     String propertyStr =
         "\n- (instancetype)init\n{\n\tself = [super init];\n\tif (self) {\n";
@@ -157,7 +175,7 @@ class ObjectiveCCreate {
             property.type == "dart.typed_data.Int64List" ||
             property.type == "dart.typed_data.Float64List" ||
             property.type == "dart.core.List") {
-          defaultValue = "[NSArray array]";
+          defaultValue = "[NSArray arrayWithObject:$defaultValue]";
         } else if (property.type == "dart.core.Map") {
           defaultValue = "[NSDictionary dictionary]";
         }
@@ -199,8 +217,7 @@ class ObjectiveCCreate {
       customClassTypes.addAll(typeString.split(", "));
     });
     customClassTypes.forEach((element) {
-      if (!baseTypeMap.values.contains(element) &&
-          !classTypeMap.values.contains(element)) {
+      if (element.startsWith(prefix)) {
         importString += "#import \"$element.h\"\n";
       }
     });
@@ -242,7 +259,6 @@ class ObjectiveCCreate {
       subTypeString += getTypeString(element, convertToClass: true) + ", ";
     });
     if (subTypeString.endsWith(", ")) {
-      //remove ", " ,because java method arg can't end with ", "
       subTypeString = subTypeString.substring(0, subTypeString.length - 2);
     }
     subTypeString += ">";
