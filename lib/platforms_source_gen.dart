@@ -18,6 +18,9 @@ void main() async {
   platforms_source_gent_start(
       "com.siyehua.example", "./Android_gen", genClassBeans,
       nullSafe: true);
+  //objc create
+  platforms_source_start_gen_objc("MQQFlutterGen_", "./iOS_gen", genClassBeans,
+      nullSafe: true);
 }
 
 class GenClassBean {
@@ -97,11 +100,9 @@ platforms_source_gent_start(String javaPackage, String androidSavePath,
   //android create
   JavaCreate.create(javaPackage, androidSavePath, genClassBeans,
       nullSafe: nullSafe);
-  //ios create
-  genIOSCode("MQQFlutterGen_", "./iOS_gen", genClassBeans, nullSafe: nullSafe);
 }
 
-void genIOSCode(
+void platforms_source_start_gen_objc(
     String projectPrefix, String iOSSavePath, List<GenClassBean> genClassBeans,
     {bool nullSafe = true}) {
   ObjectiveCCreate.create(projectPrefix, iOSSavePath, genClassBeans);
