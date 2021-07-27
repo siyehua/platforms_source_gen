@@ -7,12 +7,12 @@ A Flutter package gen platform's source code, include Android or iOS, Web ....
 # Overview
 platforms_source_gen providers utilities from automated source code generation from Dart file.
 
-when you build flutter as a Module in Android, iOS or other platform, you have to write some same function
+When you build flutter as a Module in Android, iOS or other platform, you have to write some same function
 code.
 
 ## eg: Route Path
 
-when you dump to a android page, and then you dump to flutter page, and dump to android page...
+When you dump to a android page, and then you dump to flutter page, and dump to android page...
 <br>you can use some package, like [flutter_boost](https://github.com/alibaba/flutter_boost) dump:
 
 ### in android:<br>
@@ -29,7 +29,6 @@ public class Route {
 
 ```
 
-
 ### in flutter:<br>
 
 ```dart
@@ -43,9 +42,20 @@ class Route {
 }
 ```
 
-and swift code or js file.....
+### in iOS:
 
-this tools can help you only write dart code, platform's code will auto generation.
+```objc
+@interface MQQFlutterGen_Route : NSObject
+
+@property (nonatomic, strong) String *main_page;
+@property (nonatomic, strong) String *mine_main;
+@property (nonatomic, assign) int int_value;
+
+@end
+```
+
+and Swift code or js code ...
+this tools can let you only write dart code, and auto generates other platform's code.
 
 # Quick Start
 
@@ -65,7 +75,7 @@ more installing info, you can see [this](https://pub.dev/packages/platforms_sour
 ## 02 Step
 write your dart class file in flutter project path and format it, for example: `./lib/example` :
 
-### Note: format is very import, it will fail if dart file no format.
+### Note: Format is very import, it will fail if dart file have no format.
 
 ```dart
 class InnerClass {
@@ -87,7 +97,6 @@ more [example class](https://github.com/siyehua/platforms_source_gen/tree/master
 
 write a **main fun**  in `./test/any.dart` and run:
 
-
 ### Note: the `any.dart` is in test dir
 ```dart
 import 'package:platforms_source_gen/platforms_source_gen.dart';
@@ -101,10 +110,13 @@ void main() async {
   platforms_source_gent_start(
       "com.siyehua.example", "./Android_gen", genClassBeans,
       nullSafe: true);
+  platforms_source_start_gen_objc("MQQFlutterGen_", "./iOS_gen", genClassBeans,
+      nullSafe: true);
 }
 ```
+now, you can find the android file in your custom path `./Android_gen`, or Objective-C file in `./iOS_gen`.
 
-now, you can find the android file in your custom path `./Android_gen`
+
 
 # Support
 class|support|
@@ -115,37 +127,37 @@ extends|❌|
 implements |❌|
 compose|✅|
 
-#### Note: `abstract class` must not have any methods that have been implemented, property must not have any default value.<br><br><br>
+#### Note: `abstract class` must not have any implemented methods, property must not have any default value.<br><br><br>
 
 
 method|support|
 ----|----|
 all|✅|
 
-#### Note: support abstract method in `abstract class`, don't support method no in class.<br><br><br>
+#### Note: Support abstract method in `abstract class`, but don't support method not in class.<br><br><br>
 
 Type|support|Android|iOS|
 ----|----|----|----|
-bool|✅|Boolean||
-int|✅|Long||
-double|✅|Double||
-String|✅|String||
-Uint8List|✅|byte[]||
-Int32List|✅|int[]||
-Int64List|✅|long[]||
-Float64List|✅|double[]||
-List< T > |✅|ArrayList<>||
-Map<T, U>|✅|HashMap<T, U>||
+bool|✅|Boolean|BOOL|
+int|✅|Long|int|
+double|✅|Double|double|
+String|✅|String|NSString|
+Uint8List|✅|byte[]|NSArray<NSNumber *>|
+Int32List|✅|int[]|NSArray<NSNumber *>|
+Int64List|✅|long[]|NSArray<NSNumber *>|
+Float64List|✅|double[]|NSArray<NSNumber *>|
+List< T > |✅|ArrayList<>|NSArray|
+Map<T, U>|✅|HashMap<T, U>|NSDictionary|
 var|❌||
 dynamic|❌||
 Object|❌||
 Custom Class|✅||
 
-#### Note: don't support `List a= [];`, because  it's the same as `List<dynamic> a =[];`, , and  `dynamic` is't support, `Map` is also like this.
+#### Note: Currently don't support `List a= [];`, because it's the same as `List<dynamic> a =[];`, , and `dynamic` feature doesn't support, `Map` is same.
 
 # FQA & BUG
-1. Why add  package in dev_dependencies? <br> because this tools only create platform language but not dart, so we don't need add it in dependencies.
-2. it's the same with [source_gen](https://pub.dev/packages/source_gen) or builder?<br> the `source_gen` will create dart code, but this tools only create platform languages.
+1. Why add package in dev_dependencies? <br> because this tool only use to create other platform language, so we don't need to add it in dependencies.
+2. It's the same with [source_gen](https://pub.dev/packages/source_gen) or builder?<br> the `source_gen` will create dart code, but this tool create other platform codes.
 
-more questions or but, you can go to [github](https://github.com/siyehua/platforms_source_gen/issues)
+For more questions, you can go to [issues](https://github.com/siyehua/platforms_source_gen/issues)
 

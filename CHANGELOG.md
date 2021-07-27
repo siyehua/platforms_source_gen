@@ -77,3 +77,10 @@
 ## 0.6.0
 
 * feat: support ios ,to object-c
+
+## 0.6.1
+
+* feat: support dart to Objective-C code
+* feat: support setting NSArray and NSDicionay's default value
+* feat: support convert dart's abstract method
+* fix: Objective-C base type convert problem

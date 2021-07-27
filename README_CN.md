@@ -41,6 +41,18 @@ class Route {
 }
 ```
 
+### in iOS:
+
+```objc
+@interface MQQFlutterGen_Route : NSObject
+
+@property (nonatomic, strong) String *main_page;
+@property (nonatomic, strong) String *mine_main;
+@property (nonatomic, assign) int int_value;
+
+@end
+```
+
 同样的代码我们需要些两份, 如果支持 iOS 平台, 就需要再写一份 swift, 支持 Web, 就需要再写一份 js...
 这个工具就是解放你的双手, 只需要写一分 dart 代码, 工具会根据 dart 代码, 自动生成其他平台的代码.
 
@@ -100,10 +112,12 @@ void main() async {
   platforms_source_gent_start(
       "com.siyehua.example", "./Android_gen", genClassBeans,
       nullSafe: true);
+  platforms_source_start_gen_objc("MQQFlutterGen_", "./iOS_gen", genClassBeans,
+      nullSafe: true);
 }
 ```
 
-运行结束后, 你就可以在你自定义的路径下找到自动生成的类了, 例子中的路径放在 `./Android_gen`
+运行结束后, 你就可以在你自定义的路径下找到自动生成的类了, 例子中的路径放在 `./Android_gen`, 或者在`./iOS_gen`中找到生成的OC代码。
 
 # 支持
 类|支持|
@@ -124,16 +138,16 @@ void main() async {
 
 类型|支持|Android|iOS|
 ----|----|----|----|
-bool|✅|Boolean||
-int|✅|Long||
-double|✅|Double||
-String|✅|String||
-Uint8List|✅|byte[]||
-Int32List|✅|int[]||
-Int64List|✅|long[]||
-Float64List|✅|double[]||
-List< T >|✅|ArrayList<>||
-Map<T,U>|✅|HashMap<T,U>||
+bool|✅|Boolean|BOOL|
+int|✅|Long|int|
+double|✅|Double|double|
+String|✅|String|NSString|
+Uint8List|✅|byte[]|NSArray<NSNumber *>|
+Int32List|✅|int[]|NSArray<NSNumber *>|
+Int64List|✅|long[]|NSArray<NSNumber *>|
+Float64List|✅|double[]|NSArray<NSNumber *>|
+List< T > |✅|ArrayList<>|NSArray|
+Map<T, U>|✅|HashMap<T, U>|NSDictionary
 var|❌||
 dynamic|❌||
 Object|❌||
