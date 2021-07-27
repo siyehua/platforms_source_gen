@@ -1,11 +1,16 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'bean/method_parse.dart';
-import 'gen_file_edit.dart';
 import 'platforms_source_gen.dart';
 import 'bean/property_parse.dart';
 import 'type_utils.dart';
+
+enum ObjectivePropertType {
+  base,
+  systemClass,
+  customClass,
+  specialType,
+}
 
 class ObjectiveCCreate {
   static const Map<String, String> baseTypeMap = {
@@ -175,15 +180,62 @@ class ObjectiveCCreate {
             property.type == "dart.typed_data.Int64List" ||
             property.type == "dart.typed_data.Float64List" ||
             property.type == "dart.core.List") {
-          defaultValue = "[NSArray arrayWithObject:$defaultValue]";
+          defaultValue = defaultValue.replaceAll('[', '').replaceAll(']', '');
+          if (defaultValue.isEmpty) {
+            defaultValue = "[NSArray array]";
+          } else {
+            List<String> arguments = defaultValue.split(", ");
+            arguments = convertObjcDefaultValueFor(
+                arguments, typeOf(property.subType.first));
+            defaultValue =
+                "[NSArray arrayWithObjects:${arguments.join(", ")}, nil]";
+          }
         } else if (property.type == "dart.core.Map") {
-          defaultValue = "[NSDictionary dictionary]";
+          defaultValue = defaultValue.replaceAll("{", "").replaceAll("}", "");
+          if (defaultValue.isEmpty) {
+            defaultValue = "[NSDictionary dictionary]";
+          } else {
+            List<String> arguments = defaultValue.split(", ");
+            Map<String, String> map = Map.fromIterable(arguments,
+                key: ((e) => converObjecDefaultValueFor(
+                    e.substring(0, e.indexOf(":")),
+                    typeOf(property.subType.first))),
+                value: ((e) => converObjecDefaultValueFor(
+                    e.substring(e.indexOf(":") + 2),
+                    typeOf(property.subType.last))));
+            defaultValue = "@$map";
+          }
         }
         propertyStr += "$defaultValue;\n";
       }
     });
     propertyStr += "\n\t}\n\treturn self;\n}\n";
     return propertyStr;
+  }
+
+  static String converObjecDefaultValueFor(
+      String propertyString, ObjectivePropertType type) {
+    return convertObjcDefaultValueFor([propertyString], type).first;
+  }
+
+  static List<String> convertObjcDefaultValueFor(
+      List<String> propertiesString, ObjectivePropertType type) {
+    List<String> arguments = [];
+    switch (type) {
+      case ObjectivePropertType.base:
+        arguments = List.from(propertiesString.map((e) => "@" + e));
+        break;
+      case ObjectivePropertType.systemClass:
+        // all convert to NSString
+        arguments = List.from(propertiesString.map((e) => "@\"$e\""));
+        break;
+      case ObjectivePropertType.customClass:
+        arguments = List.from(propertiesString.map((e) =>
+            "${e.replaceAll("Instance of '", "[$prefix").replaceAll("'", " new]")}"));
+        break;
+      default:
+    }
+    return arguments;
   }
 
   static String methodImplementation(List<MethodInfo> methods) {
@@ -230,24 +282,27 @@ class ObjectiveCCreate {
     bool showNullTag = true,
   }) {
     String propertyString = "@property (nonatomic, ";
-    var baseType = baseTypeMap[property.type];
     var classType = classTypeMap[property.type];
-    if (baseType != null) {
-      //base
-      propertyString += "assign) " + baseType + " ";
-    } else if (classType != null) {
-      propertyString += "strong";
-      if (showNullTag && propertyString != "void") {
-        propertyString +=
-            (property.canBeNull ? ", nullable) " : ") ") + classType;
-      }
-      if (property.subType.isNotEmpty) {
-        propertyString += getSubTypeString(property);
-      }
-      propertyString += " *";
-    } else {
-      // custom class
-      propertyString = "${property.type.split(".").last} *";
+    switch (typeOf(property)) {
+      case ObjectivePropertType.base:
+        var baseType = baseTypeMap[property.type];
+        propertyString += "assign) " + baseType! + " ";
+        break;
+      case ObjectivePropertType.systemClass:
+        propertyString += "strong";
+        if (showNullTag && propertyString != "void") {
+          propertyString +=
+              (property.canBeNull ? ", nullable) " : ") ") + classType!;
+        }
+        if (property.subType.isNotEmpty) {
+          propertyString += getSubTypeString(property);
+        }
+        propertyString += " *";
+        break;
+      case ObjectivePropertType.customClass:
+        propertyString = "${property.type.split(".").last} *";
+        break;
+      default:
     }
     return propertyString;
   }
@@ -265,31 +320,46 @@ class ObjectiveCCreate {
     return subTypeString;
   }
 
+  static ObjectivePropertType typeOf(Property property) {
+    if (baseTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.base;
+    } else if (classTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.systemClass;
+    } else if (specialTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.specialType;
+    } else {
+      return ObjectivePropertType.customClass;
+    }
+  }
+
   static String getTypeString(Property property,
       {bool convertToClass = false}) {
     String typeString = "";
-    var baseType = baseTypeMap[property.type];
-    var classType = classTypeMap[property.type];
-    var specialType = specialTypeMap[property.type];
-    if (baseType != null) {
-      if (convertToClass) {
-        typeString += "NSNumber *";
-      } else {
-        typeString += baseType;
-      }
-    } else if (classType != null) {
-      if (!classType.isEmpty) {
-        typeString += "$classType";
-      }
-      if (property.subType.isNotEmpty) {
-        String subTypeString = getSubTypeString(property);
-        typeString += subTypeString;
-      }
-      typeString += " *";
-    } else if (specialType != null) {
-      typeString = getTypeString(property.subType.first);
-    } else {
-      typeString += "$prefix${property.type.split(".").last} *";
+    switch (typeOf(property)) {
+      case ObjectivePropertType.base:
+        var baseType = baseTypeMap[property.type];
+        if (convertToClass) {
+          typeString += "NSNumber *";
+        } else {
+          typeString += "$baseType ";
+        }
+        break;
+      case ObjectivePropertType.systemClass:
+        var classType = classTypeMap[property.type];
+        if (classType!.isNotEmpty) {
+          typeString += "$classType";
+        }
+        if (property.subType.isNotEmpty) {
+          String subTypeString = getSubTypeString(property);
+          typeString += subTypeString;
+        }
+        typeString += " *";
+        break;
+      case ObjectivePropertType.specialType:
+        typeString = getTypeString(property.subType.first);
+        break;
+      default:
+        typeString += "$prefix${property.type.split(".").last} *";
     }
     return typeString;
   }
