@@ -1,11 +1,16 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'bean/method_parse.dart';
-import 'gen_file_edit.dart';
 import 'platforms_source_gen.dart';
 import 'bean/property_parse.dart';
 import 'type_utils.dart';
+
+enum ObjectivePropertType {
+  base,
+  systemClass,
+  customClass,
+  specialType,
+}
 
 class ObjectiveCCreate {
   static const Map<String, String> baseTypeMap = {
@@ -230,24 +235,27 @@ class ObjectiveCCreate {
     bool showNullTag = true,
   }) {
     String propertyString = "@property (nonatomic, ";
-    var baseType = baseTypeMap[property.type];
     var classType = classTypeMap[property.type];
-    if (baseType != null) {
-      //base
-      propertyString += "assign) " + baseType + " ";
-    } else if (classType != null) {
-      propertyString += "strong";
-      if (showNullTag && propertyString != "void") {
-        propertyString +=
-            (property.canBeNull ? ", nullable) " : ") ") + classType;
-      }
-      if (property.subType.isNotEmpty) {
-        propertyString += getSubTypeString(property);
-      }
-      propertyString += " *";
-    } else {
-      // custom class
-      propertyString = "${property.type.split(".").last} *";
+    switch (typeOf(property)) {
+      case ObjectivePropertType.base:
+        var baseType = baseTypeMap[property.type];
+        propertyString += "assign) " + baseType! + " ";
+        break;
+      case ObjectivePropertType.systemClass:
+        propertyString += "strong";
+        if (showNullTag && propertyString != "void") {
+          propertyString +=
+              (property.canBeNull ? ", nullable) " : ") ") + classType!;
+        }
+        if (property.subType.isNotEmpty) {
+          propertyString += getSubTypeString(property);
+        }
+        propertyString += " *";
+        break;
+      case ObjectivePropertType.customClass:
+        propertyString = "${property.type.split(".").last} *";
+        break;
+      default:
     }
     return propertyString;
   }
@@ -265,31 +273,46 @@ class ObjectiveCCreate {
     return subTypeString;
   }
 
+  static ObjectivePropertType typeOf(Property property) {
+    if (baseTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.base;
+    } else if (classTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.systemClass;
+    } else if (specialTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.specialType;
+    } else {
+      return ObjectivePropertType.customClass;
+    }
+  }
+
   static String getTypeString(Property property,
       {bool convertToClass = false}) {
     String typeString = "";
-    var baseType = baseTypeMap[property.type];
-    var classType = classTypeMap[property.type];
-    var specialType = specialTypeMap[property.type];
-    if (baseType != null) {
-      if (convertToClass) {
-        typeString += "NSNumber *";
-      } else {
-        typeString += baseType;
-      }
-    } else if (classType != null) {
-      if (!classType.isEmpty) {
-        typeString += "$classType";
-      }
-      if (property.subType.isNotEmpty) {
-        String subTypeString = getSubTypeString(property);
-        typeString += subTypeString;
-      }
-      typeString += " *";
-    } else if (specialType != null) {
-      typeString = getTypeString(property.subType.first);
-    } else {
-      typeString += "$prefix${property.type.split(".").last} *";
+    switch (typeOf(property)) {
+      case ObjectivePropertType.base:
+        var baseType = baseTypeMap[property.type];
+        if (convertToClass) {
+          typeString += "NSNumber *";
+        } else {
+          typeString += "$baseType ";
+        }
+        break;
+      case ObjectivePropertType.systemClass:
+        var classType = classTypeMap[property.type];
+        if (classType!.isNotEmpty) {
+          typeString += "$classType";
+        }
+        if (property.subType.isNotEmpty) {
+          String subTypeString = getSubTypeString(property);
+          typeString += subTypeString;
+        }
+        typeString += " *";
+        break;
+      case ObjectivePropertType.specialType:
+        typeString = getTypeString(property.subType.first);
+        break;
+      default:
+        typeString += "$prefix${property.type.split(".").last} *";
     }
     return typeString;
   }
