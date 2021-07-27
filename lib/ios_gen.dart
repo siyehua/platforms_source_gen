@@ -180,15 +180,62 @@ class ObjectiveCCreate {
             property.type == "dart.typed_data.Int64List" ||
             property.type == "dart.typed_data.Float64List" ||
             property.type == "dart.core.List") {
-          defaultValue = "[NSArray arrayWithObject:$defaultValue]";
+          defaultValue = defaultValue.replaceAll('[', '').replaceAll(']', '');
+          if (defaultValue.isEmpty) {
+            defaultValue = "[NSArray array]";
+          } else {
+            List<String> arguments = defaultValue.split(", ");
+            arguments = convertObjcDefaultValueFor(
+                arguments, typeOf(property.subType.first));
+            defaultValue =
+                "[NSArray arrayWithObjects:${arguments.join(", ")}, nil]";
+          }
         } else if (property.type == "dart.core.Map") {
-          defaultValue = "[NSDictionary dictionary]";
+          defaultValue = defaultValue.replaceAll("{", "").replaceAll("}", "");
+          if (defaultValue.isEmpty) {
+            defaultValue = "[NSDictionary dictionary]";
+          } else {
+            List<String> arguments = defaultValue.split(", ");
+            Map<String, String> map = Map.fromIterable(arguments,
+                key: ((e) => converObjecDefaultValueFor(
+                    e.substring(0, e.indexOf(":")),
+                    typeOf(property.subType.first))),
+                value: ((e) => converObjecDefaultValueFor(
+                    e.substring(e.indexOf(":") + 2),
+                    typeOf(property.subType.last))));
+            defaultValue = "@$map";
+          }
         }
         propertyStr += "$defaultValue;\n";
       }
     });
     propertyStr += "\n\t}\n\treturn self;\n}\n";
     return propertyStr;
+  }
+
+  static String converObjecDefaultValueFor(
+      String propertyString, ObjectivePropertType type) {
+    return convertObjcDefaultValueFor([propertyString], type).first;
+  }
+
+  static List<String> convertObjcDefaultValueFor(
+      List<String> propertiesString, ObjectivePropertType type) {
+    List<String> arguments = [];
+    switch (type) {
+      case ObjectivePropertType.base:
+        arguments = List.from(propertiesString.map((e) => "@" + e));
+        break;
+      case ObjectivePropertType.systemClass:
+        // all convert to NSString
+        arguments = List.from(propertiesString.map((e) => "@\"$e\""));
+        break;
+      case ObjectivePropertType.customClass:
+        arguments = List.from(propertiesString.map((e) =>
+            "${e.replaceAll("Instance of '", "[$prefix").replaceAll("'", " new]")}"));
+        break;
+      default:
+    }
+    return arguments;
   }
 
   static String methodImplementation(List<MethodInfo> methods) {
