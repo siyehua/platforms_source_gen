@@ -18,7 +18,6 @@ void main() async {
   platforms_source_gent_start(
       "com.siyehua.example", "./Android_gen", genClassBeans,
       nullSafe: true);
-  genIOSCode("MQQFlutterGen_", "./iOS_gen", genClassBeans);
 }
 
 class GenClassBean {
@@ -99,7 +98,7 @@ platforms_source_gent_start(String javaPackage, String androidSavePath,
   JavaCreate.create(javaPackage, androidSavePath, genClassBeans,
       nullSafe: nullSafe);
   //ios create
-  //todo
+  genIOSCode("MQQFlutterGen_", "./iOS_gen", genClassBeans, nullSafe: nullSafe);
 }
 
 void genIOSCode(
@@ -158,7 +157,7 @@ Future<List> _scan_dart_file_use_shell(
   import 'dart:convert';
   import 'package:platforms_source_gen/platforms_source_gen.dart';
   import 'package:platforms_source_gen/scan_dart_file.dart';
-  import '${file.path.split('/').last}';
+  import '${file.path.replaceAll("\\", "/").split('/').last}';
   
   void main() { var typeList =<Type>[];\n""";
   genClassBeans.forEach((element) {
@@ -167,7 +166,7 @@ Future<List> _scan_dart_file_use_shell(
     typeList.add(type${element.classInfo.name});""";
   });
   allContent += """\n  
-  List<GenClassBean> genClassBeans = reflectStart(typeList, '${file.absolute.path}');
+  List<GenClassBean> genClassBeans = reflectStart(typeList, '${file.absolute.path.replaceAll("\\", "/")}');
   String a = jsonEncode(genClassBeans);
   print(a);
   }""";

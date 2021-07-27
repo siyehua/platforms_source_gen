@@ -69,3 +69,11 @@
 ## 0.5.1
 
 * feat: format source code
+
+## 0.5.2
+
+* fix: windows create tmp dart file path error
+
+## 0.6.0
+
+* feat: support ios ,to object-c

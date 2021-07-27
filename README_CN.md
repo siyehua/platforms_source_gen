@@ -91,13 +91,15 @@ flutter 的应用入口, 会直接运行起一个 app.
 ```dart
 import 'package:platforms_source_gen/platforms_source_gen.dart';
 
-void main() {
- List<GenClassBean> genClassBeans =platforms_source_gen_init(
+void main() async {
+  List<GenClassBean> genClassBeans = await platforms_source_gen_init(
       "./lib/example", //you dart file path
       "com.siyehua.example", //your android's  java class package name
       "./Android_gen" //your android file save path
-  );
-  platforms_source_gent_start("com.siyehua.example", "./Android_gen", genClassBeans);
+      );
+  platforms_source_gent_start(
+      "com.siyehua.example", "./Android_gen", genClassBeans,
+      nullSafe: true);
 }
 ```
 
@@ -141,9 +143,8 @@ Object|❌||
 
 
 # 问题 & BUG
-1. 支持 iOS 平台吗??<br> 支持的, 但是目前还没有实现, 下一步就是实现 iOS 或其他平台的语言, 也欢迎大家提交 commit.
-2. 为什么依赖要加在 `dev_dependencies` 中? <br> 因为这是一个开发工具,这个工具的代码无需打包进源码中, 故只需要加在 dev_dependencies 即可.
-3. 这个工具和 [source_gen](https://pub.dev/packages/source_gen) 有什么不同, 为什么不直接使用它?<br>`source_gen` 主要是依赖 run build 来生成自己想要的 dart 代码, 而这个工具是根据 dart 代码生成其他平台代码, 方法和作用不相同.
+1. 为什么依赖要加在 `dev_dependencies` 中? <br> 因为这是一个开发工具,这个工具的代码无需打包进源码中, 故只需要加在 dev_dependencies 即可.
+2. 这个工具和 [source_gen](https://pub.dev/packages/source_gen) 有什么不同, 为什么不直接使用它?<br>`source_gen` 主要是依赖 run build 来生成自己想要的 dart 代码, 而这个工具是根据 dart 代码生成其他平台代码, 方法和作用不相同.
 
 更多问题和 Bug, 欢迎前往 [github](https://github.com/siyehua/platforms_source_gen/issues)
 

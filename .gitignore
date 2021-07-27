@@ -76,4 +76,5 @@ build/
 
 #Gen or Build
 /Android_gen
+/iOS_gen
 /build

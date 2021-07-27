@@ -83,6 +83,7 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
       int argParamsStartIndex =
           methodLineStr.indexOf(method.name) + method.name.length + 1;
       element.parameters.forEach((param) {
+        // param.isOptional
         var property = Property();
         method.args.add(property);
         var type = param.type;
