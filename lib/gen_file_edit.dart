@@ -2,7 +2,7 @@
 class GenFileEdit {
   /// remove dart nullSafe keywords
   static String removeDartNullSafe(String content) {
-    return content.replaceAll("!", "").replaceAll("?", "");
+    return content.replaceAll("!.", ".").replaceAll("?", "");
   }
 
   /// remove java nullSafe keywords
