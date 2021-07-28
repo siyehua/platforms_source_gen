@@ -1,6 +1,6 @@
 name: platforms_source_gen
 description: A Flutter package gen platform's source code, include Android or iOS, Web ....
-version: 0.6.2
+version: 0.6.3
 homepage: https://github.com/siyehua/platforms_source_gen
 
 environment:
