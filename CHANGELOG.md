@@ -84,3 +84,11 @@
 * feat: support setting NSArray and NSDicionay's default value
 * feat: support convert dart's abstract method
 * fix: Objective-C base type convert problem
+
+## 0.6.2
+
+* fix: Objective-C custom class properties convert problem
+
+## 0.6.3
+
+* fix: Objective-C method convert problem
