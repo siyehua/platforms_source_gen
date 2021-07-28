@@ -19,7 +19,7 @@ class ObjectiveCCreate {
     "dart.core.double": "double",
   };
   static const Map<String, String> classTypeMap = {
-    "dart.core.String": "String",
+    "dart.core.String": "NSString",
     "dart.typed_data.Uint8List": "NSArray",
     "dart.typed_data.Int32List": "NSArray",
     "dart.typed_data.Int64List": "NSArray",
@@ -144,16 +144,20 @@ class ObjectiveCCreate {
       result += "- (" + getTypeString(method.returnType) + ")" + method.name;
       String argType = "";
       if (!method.args.isEmpty) {
-        method.args.forEach((arg) {
-          argType += getTypeString(arg) + arg.name + ", ";
-        });
-        if (argType.endsWith(", ")) {
-          //remove ", " ,because java method arg can't end with ", "
-          argType = argType.substring(0, argType.length - 2);
+        result += ":";
+        for (var i = 0; i < method.args.length; i++) {
+          Property arg = method.args[i];
+          if (i > 0) {
+            argType += " ${arg.name}:";
+          }
+          argType += "(";
+          if (arg.canBeNull && typeOf(arg) != ObjectivePropertType.base) {
+            argType += "nullable ";
+          }
+          argType += getTypeString(arg) + ")" + arg.name;
         }
-        result += "(" + argType + ")";
       }
-      result += ";\n";
+      result += "$argType;\n";
     });
     return result;
   }
@@ -282,13 +286,13 @@ class ObjectiveCCreate {
     bool showNullTag = true,
   }) {
     String propertyString = "@property (nonatomic, ";
-    var classType = classTypeMap[property.type];
     switch (typeOf(property)) {
       case ObjectivePropertType.base:
         var baseType = baseTypeMap[property.type];
         propertyString += "assign) " + baseType! + " ";
         break;
       case ObjectivePropertType.systemClass:
+        var classType = classTypeMap[property.type];
         propertyString += "strong";
         if (showNullTag && propertyString != "void") {
           propertyString +=
@@ -300,18 +304,27 @@ class ObjectiveCCreate {
         propertyString += " *";
         break;
       case ObjectivePropertType.customClass:
-        propertyString = "${property.type.split(".").last} *";
+        propertyString += "strong";
+        propertyString += (property.canBeNull ? ", nullable) " : ") ") +
+            "$prefix${property.type.split(".").last} *";
         break;
       default:
     }
     return propertyString;
   }
 
-  static String getSubTypeString(Property property) {
+  static String getSubTypeString(Property property,
+      {bool showNullTag = false}) {
     String subTypeString = "";
     subTypeString += "<";
     property.subType.forEach((element) {
-      subTypeString += getTypeString(element, convertToClass: true) + ", ";
+      subTypeString += getTypeString(element, convertToClass: true);
+      if (showNullTag &&
+          element.canBeNull &&
+          typeOf(element) != ObjectivePropertType.base) {
+        subTypeString += " _Nullable";
+      }
+      subTypeString += ", ";
     });
     if (subTypeString.endsWith(", ")) {
       subTypeString = subTypeString.substring(0, subTypeString.length - 2);
@@ -359,7 +372,12 @@ class ObjectiveCCreate {
         typeString = getTypeString(property.subType.first);
         break;
       default:
-        typeString += "$prefix${property.type.split(".").last} *";
+        typeString += "$prefix${property.type.split(".").last}";
+        if (property.subType.isNotEmpty) {
+          String subTypeString = getSubTypeString(property, showNullTag: true);
+          typeString += subTypeString;
+        }
+        typeString += " *";
     }
     return typeString;
   }

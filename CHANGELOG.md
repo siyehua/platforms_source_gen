@@ -87,4 +87,8 @@
 
 ## 0.6.2
 
-* fix: dart nullSafe = false bug fix
+* fix: Objective-C custom class properties convert problem
+
+## 0.6.3
+
+* fix: Objective-C method convert problem

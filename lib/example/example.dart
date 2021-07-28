@@ -15,6 +15,7 @@ abstract class IAccount {
 }
 
 class MyClass {
+  InnerClass? abc;
   int? a;
   int b = 0;
   double? c;
