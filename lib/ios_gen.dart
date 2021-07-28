@@ -282,13 +282,13 @@ class ObjectiveCCreate {
     bool showNullTag = true,
   }) {
     String propertyString = "@property (nonatomic, ";
-    var classType = classTypeMap[property.type];
     switch (typeOf(property)) {
       case ObjectivePropertType.base:
         var baseType = baseTypeMap[property.type];
         propertyString += "assign) " + baseType! + " ";
         break;
       case ObjectivePropertType.systemClass:
+        var classType = classTypeMap[property.type];
         propertyString += "strong";
         if (showNullTag && propertyString != "void") {
           propertyString +=
@@ -300,7 +300,9 @@ class ObjectiveCCreate {
         propertyString += " *";
         break;
       case ObjectivePropertType.customClass:
-        propertyString = "${property.type.split(".").last} *";
+        propertyString += "strong";
+        propertyString += (property.canBeNull ? ", nullable) " : ") ") +
+            "$prefix${property.type.split(".").last} *";
         break;
       default:
     }
