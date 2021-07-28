@@ -92,3 +92,7 @@
 ## 0.6.3
 
 * fix: Objective-C method convert problem
+
+## 0.6.4
+
+* fix: dart null safe bug
