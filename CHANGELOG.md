@@ -104,3 +104,7 @@
 # 0.6.6
 
 * Fix: 'void' type convert to 'void *' in objc instead of 'void' problem
+
+# 0.6.7
+
+* Fix: missing custom class import probem
