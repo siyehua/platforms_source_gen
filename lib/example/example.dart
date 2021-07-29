@@ -1,5 +1,5 @@
 abstract class IAccount {
-  Future<String?> login(String? name, String password);
+  Future<String?> login(String? name, Object password);
 
   Future<String?> getToken();
 

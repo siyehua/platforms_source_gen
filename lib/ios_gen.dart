@@ -28,6 +28,7 @@ class ObjectiveCCreate {
     "dart.core.Map": "NSDictionary",
     "number": "NSNumber",
     "void": "void",
+    "dart.core.Object": "id",
   };
   static const Map<String, String> specialTypeMap = {
     "dart.async.Future": "",
@@ -301,7 +302,10 @@ class ObjectiveCCreate {
         if (property.subType.isNotEmpty) {
           propertyString += getSubTypeString(property);
         }
-        propertyString += " *";
+        propertyString += " ";
+        if (!isObjectType(property)) {
+          propertyString += "*";
+        }
         break;
       case ObjectivePropertType.customClass:
         propertyString += "strong";
@@ -366,7 +370,10 @@ class ObjectiveCCreate {
           String subTypeString = getSubTypeString(property);
           typeString += subTypeString;
         }
-        typeString += " *";
+        typeString += " ";
+        if (!isObjectType(property)) {
+          typeString += "*";
+        }
         break;
       case ObjectivePropertType.specialType:
         typeString = getTypeString(property.subType.first);
@@ -380,6 +387,10 @@ class ObjectiveCCreate {
         typeString += " *";
     }
     return typeString;
+  }
+
+  static bool isObjectType(Property property) {
+    return property.type == "dart.core.Object";
   }
 
   /// save all content use shell
