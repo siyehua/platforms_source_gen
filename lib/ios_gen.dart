@@ -70,7 +70,7 @@ class ObjectiveCCreate {
           .replaceAll(",", "");
 
       allContent += "${importStr}";
-      allContent += getCustomClassImport(value.properties);
+      allContent += getCustomClassImport(value);
       allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
 
       //property
@@ -263,15 +263,24 @@ class ObjectiveCCreate {
     return result;
   }
 
-  static String getCustomClassImport(List<Property> properties) {
+  static String getCustomClassImport(GenClassBean classBean) {
     String importString = "";
     Set<String> customClassTypes = Set();
-    properties.forEach((value) {
+    classBean.properties.forEach((value) {
       String typeString = getTypeString(value);
       typeString = typeString.replaceAll(" *", "");
       typeString = typeString.replaceAll("<", ", ");
       typeString = typeString.replaceAll(">", "");
       customClassTypes.addAll(typeString.split(", "));
+    });
+    classBean.methods.forEach((method) {
+      method.args.forEach((arg) {
+        String typeString = getTypeString(arg);
+        typeString = typeString.replaceAll(" *", "");
+        typeString = typeString.replaceAll("<", ", ");
+        typeString = typeString.replaceAll(">", "");
+        customClassTypes.addAll(typeString.split(", "));
+      });
     });
     customClassTypes.forEach((element) {
       if (element.startsWith(prefix)) {
@@ -372,7 +381,7 @@ class ObjectiveCCreate {
         }
         typeString += " ";
         if (!isBaseClassObjectType(property)) {
-          typeString += " *";
+          typeString += "*";
         }
         break;
       case ObjectivePropertType.specialType:
