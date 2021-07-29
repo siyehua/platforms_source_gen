@@ -303,7 +303,7 @@ class ObjectiveCCreate {
           propertyString += getSubTypeString(property);
         }
         propertyString += " ";
-        if (!isObjectType(property)) {
+        if (!isBaseClassObjectType(property)) {
           propertyString += "*";
         }
         break;
@@ -371,8 +371,8 @@ class ObjectiveCCreate {
           typeString += subTypeString;
         }
         typeString += " ";
-        if (!isObjectType(property)) {
-          typeString += "*";
+        if (!isBaseClassObjectType(property)) {
+          typeString += " *";
         }
         break;
       case ObjectivePropertType.specialType:
@@ -389,8 +389,8 @@ class ObjectiveCCreate {
     return typeString;
   }
 
-  static bool isObjectType(Property property) {
-    return property.type == "dart.core.Object";
+  static bool isBaseClassObjectType(Property property) {
+    return property.type == "dart.core.Object" || property.type == "void";
   }
 
   /// save all content use shell
