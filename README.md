@@ -150,7 +150,7 @@ List< T > |✅|ArrayList<>|NSArray|
 Map<T, U>|✅|HashMap<T, U>|NSDictionary|
 var|❌||
 dynamic|❌||
-Object|❌||
+Object|✅|❌|id|
 Custom Class|✅||
 
 #### Note: Currently don't support `List a= [];`, because it's the same as `List<dynamic> a =[];`, , and `dynamic` feature doesn't support, `Map` is same.
