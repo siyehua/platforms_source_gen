@@ -96,3 +96,11 @@
 ## 0.6.4
 
 * fix: dart null safe bug
+
+## 0.6.5
+
+* Feat: Objective-C support convert 'Object' type to 'id'
+
+# 0.6.6
+
+* Fix: 'void' type convert to 'void *' in objc instead of 'void' problem
