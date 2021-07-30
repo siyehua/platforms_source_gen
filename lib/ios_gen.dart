@@ -86,7 +86,7 @@ class ObjectiveCCreate {
         defineSuffixString = "<NSObject>\n@optional";
       } else {
         defineString += "@interface";
-        defineSuffixString = ": NSObject";
+        defineSuffixString = ": NSObject <NSCopying>";
       }
       allContent += "${defineString} ${projectPrefix}${value.classInfo.name}";
       allContent +=
@@ -115,7 +115,7 @@ class ObjectiveCCreate {
         allContent += propertyImplementation(value.properties);
 
         //method
-        allContent += methodImplementation(value.methods);
+        allContent += methodImplementationForClass(value);
 
         allContent += "\n@end\nNS_ASSUME_NONNULL_END";
         ocImplementFile.writeAsStringSync(allContent);
@@ -243,23 +243,14 @@ class ObjectiveCCreate {
     return arguments;
   }
 
-  static String methodImplementation(List<MethodInfo> methods) {
-    String result = "\n";
-    methods.forEach((method) {
-      result += "- (" + getTypeString(method.returnType) + ")" + method.name;
-      String argType = "";
-      if (!method.args.isEmpty) {
-        method.args.forEach((arg) {
-          argType += getTypeString(arg) + arg.name + ", ";
-        });
-        if (argType.endsWith(", ")) {
-          //remove ", " ,because java method arg can't end with ", "
-          argType = argType.substring(0, argType.length - 2);
-        }
-        result += "(" + argType + ")";
-      }
-      result += " {}\n";
+  static String methodImplementationForClass(GenClassBean classBean) {
+    String result = "\n- (nonnull id)copyWithZone:(nullable NSZone *)zone\n{\n";
+    result +=
+        "\t${prefix}${classBean.classInfo.name} *value = [[self.class allocWithZone:zone] init];\n";
+    classBean.properties.forEach((property) {
+      result += "\tvalue.${property.name} = _${property.name};\n";
     });
+    result += "\treturn value;\n}\n";
     return result;
   }
 
