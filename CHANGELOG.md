@@ -101,10 +101,14 @@
 
 * Feat: Objective-C support convert 'Object' type to 'id'
 
-# 0.6.6
+## 0.6.6
 
 * Fix: 'void' type convert to 'void *' in objc instead of 'void' problem
 
-# 0.6.7
+## 0.6.7
 
 * Fix: missing custom class import probem
+
+## 0.6.8
+
+* Feat: Objective-C generated class support 'NSCopying' protocol
