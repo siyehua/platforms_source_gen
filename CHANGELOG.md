@@ -107,7 +107,7 @@
 
 ## 0.6.7
 
-* Fix: missing custom class import probem
+* Fix: missing custom class import bug
 
 ## 0.6.8
 
@@ -117,3 +117,7 @@
 
 * Update: Objective-C now will convert Uint8List, Int32List, Int64List, Float64List into NSData
 * However, the oc implementation of these data type is not finished yet.
+
+## 0.7.0
+
+* feat: remove no use code
