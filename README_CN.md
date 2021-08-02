@@ -142,10 +142,10 @@ bool|✅|Boolean|BOOL|
 int|✅|Long|int|
 double|✅|Double|double|
 String|✅|String|NSString|
-Uint8List|✅|byte[]|NSArray<NSNumber *>|
-Int32List|✅|int[]|NSArray<NSNumber *>|
-Int64List|✅|long[]|NSArray<NSNumber *>|
-Float64List|✅|double[]|NSArray<NSNumber *>|
+Uint8List|✅|byte[]|NSData|
+Int32List|✅|int[]|NSData|
+Int64List|✅|long[]|NSData|
+Float64List|✅|double[]|NSData|
 List< T > |✅|ArrayList<>|NSArray|
 Map<T, U>|✅|HashMap<T, U>|NSDictionary
 var|❌||
