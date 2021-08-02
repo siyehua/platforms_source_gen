@@ -20,10 +20,10 @@ class ObjectiveCCreate {
   };
   static const Map<String, String> classTypeMap = {
     "dart.core.String": "NSString",
-    "dart.typed_data.Uint8List": "NSArray",
-    "dart.typed_data.Int32List": "NSArray",
-    "dart.typed_data.Int64List": "NSArray",
-    "dart.typed_data.Float64List": "NSArray",
+    "dart.typed_data.Uint8List": "NSData",
+    "dart.typed_data.Int32List": "NSData",
+    "dart.typed_data.Int64List": "NSData",
+    "dart.typed_data.Float64List": "NSData",
     "dart.core.List": "NSArray",
     "dart.core.Map": "NSDictionary",
     "number": "NSNumber",
@@ -183,8 +183,10 @@ class ObjectiveCCreate {
         } else if (property.type == "dart.typed_data.Uint8List" ||
             property.type == "dart.typed_data.Int32List" ||
             property.type == "dart.typed_data.Int64List" ||
-            property.type == "dart.typed_data.Float64List" ||
-            property.type == "dart.core.List") {
+            property.type == "dart.typed_data.Float64List") {
+          // not implemented
+          defaultValue = "nil";
+        } else if (property.type == "dart.core.List") {
           defaultValue = defaultValue.replaceAll('[', '').replaceAll(']', '');
           if (defaultValue.isEmpty) {
             defaultValue = "[NSArray array]";

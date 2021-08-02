@@ -112,3 +112,8 @@
 ## 0.6.8
 
 * Feat: Objective-C generated class support 'NSCopying' protocol
+
+## 0.6.9
+
+* Update: Objective-C now will convert Uint8List, Int32List, Int64List, Float64List into NSData
+* However, the oc implementation of these data type is not finished yet.
