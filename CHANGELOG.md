@@ -121,3 +121,7 @@
 ## 0.7.0
 
 * feat: remove no use code
+
+## 0.7.1
+
+* Update: Objective-C now will convert static properties into marco instead of properties 
