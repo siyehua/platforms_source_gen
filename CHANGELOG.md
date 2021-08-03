@@ -107,7 +107,7 @@
 
 ## 0.6.7
 
-* Fix: missing custom class import probem
+* Fix: missing custom class import bug
 
 ## 0.6.8
 
@@ -119,5 +119,9 @@
 * However, the oc implementation of these data type is not finished yet.
 
 ## 0.7.0
+
+* feat: remove no use code
+
+## 0.7.1
 
 * Update: Objective-C now will convert static properties into marco instead of properties 

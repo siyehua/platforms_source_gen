@@ -11,15 +11,17 @@ import 'bean/property_parse.dart';
 
 void main() async {
   List<GenClassBean> genClassBeans = await platforms_source_gen_init(
-      "./lib/example", //you dart file path
-      "com.siyehua.example", //your android's  java class package name
-      "./Android_gen" //your android file save path
-      );
+    "./lib/example", //you dart file path
+  );
   platforms_source_gent_start(
-      "com.siyehua.example", "./Android_gen", genClassBeans,
+      "com.siyehua.example", //javaPackage
+      "./Android_gen", // androidSavePath
+      genClassBeans,
       nullSafe: true);
-  //objc create
-  platforms_source_start_gen_objc("MQQFlutterGen_", "./iOS_gen", genClassBeans,
+  platforms_source_start_gen_objc(
+      "MQQFlutterGen_", // iOS Pre
+      "./iOS_gen", //iOS save path
+      genClassBeans,
       nullSafe: true);
 }
 
@@ -71,11 +73,7 @@ class GenClassBean {
   GenClassBean();
 }
 
-Future<List<GenClassBean>> platforms_source_gen_init(
-    String dir, String javaPackage, String androidSavePath) async {
-  // String path = "./lib/example";
-  // String javaPackage = "com.siyehua.example";
-  // String androidSavePath = "./Android_gen";
+Future<List<GenClassBean>> platforms_source_gen_init(String dir) async {
   List<GenClassBean> list = [];
   Directory directory = Directory(dir);
   var listFile = directory
@@ -86,8 +84,7 @@ Future<List<GenClassBean>> platforms_source_gen_init(
 
   for (int i = 0; i < listFile.length; i++) {
     if (listFile[i] is File) {
-      List<GenClassBean> aaa =
-          await _parseFile(listFile[i], javaPackage, androidSavePath);
+      List<GenClassBean> aaa = await _parseFile(listFile[i]);
       list.addAll(aaa);
     }
   }
@@ -108,8 +105,7 @@ void platforms_source_start_gen_objc(
   ObjectiveCCreate.create(projectPrefix, iOSSavePath, genClassBeans);
 }
 
-Future<List<GenClassBean>> _parseFile(
-    File file, String javaPackage, String androidSavePath) async {
+Future<List<GenClassBean>> _parseFile(File file) async {
   List<String> importList = [];
   List<GenClassBean> genClassBeans = [];
   GenClassBean genClassBean = GenClassBean();
