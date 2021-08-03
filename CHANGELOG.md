@@ -124,4 +124,8 @@
 
 ## 0.7.1
 
-* Update: Objective-C now will convert static properties into marco instead of properties 
+* Update: Objective-C now will convert static properties into marco instead of properties
+
+## 0.7.2
+
+* Feat: add custom save path

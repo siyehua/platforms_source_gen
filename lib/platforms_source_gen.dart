@@ -27,6 +27,7 @@ void main() async {
 
 class GenClassBean {
   String path = "";
+  String savePath = "";
   ClassInfo classInfo = ClassInfo();
   List<String> imports = [];
   List<MethodInfo> methods = [];

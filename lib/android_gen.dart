@@ -9,15 +9,19 @@ import 'type_utils.dart';
 /// Java file create
 class JavaCreate {
   static void create(
-      String packageName, String savePath, List<GenClassBean> genClassBeans,
+      String packageName, String defaultSavePath, List<GenClassBean> genClassBeans,
       {bool nullSafe = true}) {
-    Directory androidTargetDir = Directory(savePath);
+    Directory androidTargetDir = Directory(defaultSavePath);
     bool exists = androidTargetDir.existsSync();
     if (!exists) {
       androidTargetDir.createSync(recursive: true);
     }
     genClassBeans.forEach((value) {
-      File javaFile = File(savePath + "/" + value.classInfo.name + ".java");
+      var path = defaultSavePath;
+      if(value.savePath.isNotEmpty) {
+        path = value.savePath;
+      }
+      File javaFile = File(path + "/" + value.classInfo.name + ".java");
 
       //package
       String allContent = "package " + packageName + ";\n";
