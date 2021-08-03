@@ -117,3 +117,7 @@
 
 * Update: Objective-C now will convert Uint8List, Int32List, Int64List, Float64List into NSData
 * However, the oc implementation of these data type is not finished yet.
+
+## 0.7.0
+
+* Update: Objective-C now will convert static properties into marco instead of properties 
