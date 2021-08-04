@@ -2,12 +2,14 @@ import 'property_parse.dart';
 
 class MethodInfo {
   String name = "";
+  String originDeclaration = "";
   List<Property> args = [];
   Property returnType = Property();
   bool isAbstract = false;
 
   MethodInfo.fromJson(Map<String, dynamic> json) {
     name = json['name'];
+    originDeclaration = json['originDeclaration'];
     isAbstract = json['isAbstract'];
     if (json['args'] != null) {
       args = [];
@@ -23,6 +25,7 @@ class MethodInfo {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
     data['name'] = this.name;
+    data['originDeclaration'] = this.originDeclaration;
     data['isAbstract'] = this.isAbstract;
     data['args'] = this.args.map((v) => v.toJson()).toList();
     data['returnType'] = this.returnType.toJson();
@@ -33,6 +36,7 @@ class MethodInfo {
   String toString() {
     return '''{
                 "name": "$name", 
+                "originDeclaration": "$originDeclaration",
                 "args": $args, 
                 "isAbstract": $isAbstract, 
                 "returnType": $returnType

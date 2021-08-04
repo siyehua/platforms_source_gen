@@ -145,6 +145,13 @@ class ObjectiveCCreate {
   static String method(List<MethodInfo> methods) {
     String result = "";
     methods.forEach((method) {
+      String methodComment =
+          "\n/// Dart method declaraction: ${method.originDeclaration}\n";
+      method.args.forEach((element) {
+        methodComment +=
+            "/// @param ${element.name} Agument ${element.name}, type: ${element.type}.\n";
+      });
+      result += methodComment;
       result += "- (" + getTypeString(method.returnType) + ")" + method.name;
       String argType = "";
       if (!method.args.isEmpty) {
@@ -309,6 +316,8 @@ class ObjectiveCCreate {
     Property property, {
     bool showNullTag = true,
   }) {
+    String propertyComment =
+        "\n/// Dart property declaration: ${property.originDeclaration.trim()}.\n";
     String propertyString = "@property (nonatomic, ";
     switch (typeOf(property)) {
       case ObjectivePropertType.base:
@@ -337,7 +346,7 @@ class ObjectiveCCreate {
         break;
       default:
     }
-    return propertyString;
+    return propertyComment + propertyString;
   }
 
   static String getSubTypeString(Property property,
