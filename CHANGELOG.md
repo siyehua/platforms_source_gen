@@ -129,3 +129,7 @@
 ## 0.7.2
 
 * Feat: add custom save path
+
+## 0.7.3
+
+* Fix: write file error when dir is not exits

@@ -55,6 +55,9 @@ class JavaCreate {
       if (!nullSafe) {
         allContent = GenFileEdit.removeJavaNullSafe(allContent);
       }
+      if (!javaFile.parent.existsSync()) {
+        javaFile.parent.createSync(recursive: true);
+      }
       javaFile.writeAsStringSync(allContent);
       if (!javaFile.existsSync()) {
         //if not create use dart io, use shell

@@ -94,6 +94,9 @@ class ObjectiveCCreate {
         allContent +=
             " $defineSuffixString\n\n$propertyStr\n${methodStr}\n@end\nNS_ASSUME_NONNULL_END";
       }
+      if (!ocHeaderFile.parent.existsSync()) {
+        ocHeaderFile.parent.createSync(recursive: true);
+      }
       ocHeaderFile.writeAsStringSync(allContent);
       if (!ocHeaderFile.existsSync()) {
         //if not create use dart io, use shell
@@ -121,6 +124,9 @@ class ObjectiveCCreate {
         allContent += methodImplementationForClass(value);
 
         allContent += "\n@end\nNS_ASSUME_NONNULL_END";
+        if (!ocImplementFile.parent.existsSync()) {
+          ocImplementFile.parent.createSync(recursive: true);
+        }
         ocImplementFile.writeAsStringSync(allContent);
         if (!ocImplementFile.existsSync()) {
           //if not create use dart io, use shell
