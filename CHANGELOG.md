@@ -133,3 +133,7 @@
 ## 0.7.3
 
 * Fix: write file error when dir is not exits
+
+## 0.7.4
+
+* Fix: add custom channel name
