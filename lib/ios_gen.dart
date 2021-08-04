@@ -70,7 +70,7 @@ class ObjectiveCCreate {
           .replaceAll(",", "");
 
       allContent += "${importStr}";
-      allContent += "${staticPropertyImplementation(value.properties)}";
+      allContent += "${staticPropertyImplementation(value)}";
       if (!_isStaticPropertiesOnly(value)) {
         allContent += getCustomClassImport(value);
         allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
@@ -166,12 +166,12 @@ class ObjectiveCCreate {
     return result;
   }
 
-  static String staticPropertyImplementation(List<Property> properties) {
+  static String staticPropertyImplementation(GenClassBean classBean) {
     String staticPropertyStr = "";
-    properties.forEach((property) {
+    classBean.properties.forEach((property) {
       if (property.isStatic) {
         staticPropertyStr +=
-            "#define ${prefix}${property.name}\t${defaultValueOf(property)}\n";
+            "#define ${prefix}${classBean.classInfo.name}_${property.name}\t${defaultValueOf(property)}\n";
       }
     });
     if (staticPropertyStr.isNotEmpty) {
