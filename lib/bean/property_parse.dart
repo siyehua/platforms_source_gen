@@ -2,6 +2,7 @@ class Property {
   String type = "";
   String name = "";
   String defaultValue1 = "";
+  String originDeclaration = "";
   bool isStatic = false;
   bool isConst = false;
   bool isFinal = false;
@@ -14,6 +15,7 @@ class Property {
     type = json['type'];
     name = json['name'];
     defaultValue1 = json['defaultValue1'];
+    originDeclaration = json['originDeclaration'];
     isStatic = json['isStatic'];
     isConst = json['isConst'];
     isFinal = json['isFinal'];
@@ -33,6 +35,7 @@ class Property {
     data['type'] = this.type;
     data['name'] = this.name;
     data['defaultValue1'] = this.defaultValue1;
+    data['originDeclaration'] = this.originDeclaration;
     data['isStatic'] = this.isStatic;
     data['isConst'] = this.isConst;
     data['isFinal'] = this.isFinal;
@@ -48,6 +51,7 @@ class Property {
                 "type": "$type", 
                 "name": "$name", 
                 "defaultValue1": "$defaultValue1", 
+                "originDeclaration": "$originDeclaration",
                 "isStatic": $isStatic, 
                 "isConst": $isConst, 
                 "isFinal": $isFinal, 

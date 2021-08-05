@@ -137,3 +137,8 @@
 ## 0.7.4
 
 * Fix: add custom channel name
+
+## 0.7.5
+
+* Feat: Support reading dart methods and properties' origin declaraction, now iOS generated code can add them as a comment.
+* Update: Now iOS generated code will add class name prefix to static properties.

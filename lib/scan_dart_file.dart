@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:mirrors';
 
-
 import 'bean/class_parse.dart';
 import 'bean/method_parse.dart';
 import 'platforms_source_gen.dart';
@@ -80,6 +79,7 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
 
       method.name = MirrorSystem.getName(element.simpleName);
       method.isAbstract = element.isAbstract;
+      method.originDeclaration = methodLineStr;
       int argParamsStartIndex =
           methodLineStr.indexOf(method.name) + method.name.length + 1;
       element.parameters.forEach((param) {
@@ -145,6 +145,7 @@ List<Property> _parsePropertyTypes(
     var type = value.type;
     property.type = MirrorSystem.getName(type.qualifiedName);
     property.name = MirrorSystem.getName(value.simpleName);
+    property.originDeclaration = fileContent[locations[index].line - 1];
     String targetLineStr = _checkPropertyCanBeNull(
       property,
       locations,
