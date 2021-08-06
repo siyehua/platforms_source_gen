@@ -1,3 +1,8 @@
+enum MyEnum {
+  first,
+  second,
+}
+
 abstract class IAccount {
   Future<String?> login(String? name, Object password);
 
@@ -12,6 +17,8 @@ abstract class IAccount {
   void setMap(Map<int, bool>? a);
 
   Future<Map<int, bool>> all(List<int>? a, Map<String?, int> b, int? c);
+
+  void testEnum(MyEnum a);
 }
 
 class MyClass {
@@ -20,6 +27,7 @@ class MyClass {
   int b = 0;
   double? c;
   String? d = "default";
+  MyEnum e = MyEnum.first;
 
   // Object h; //it's not support.
   List<int>? g;

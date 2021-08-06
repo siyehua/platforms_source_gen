@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:mirrors';
 
@@ -31,7 +32,7 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
             (element) => element is MethodMirror && element.isConstructor)
         as MethodMirror?;
     InstanceMirror? instanceMirror;
-    if (!classMirror.isAbstract) {
+    if (!classMirror.isAbstract && !classMirror.isEnum) {
       try {
         instanceMirror = classMirror
             .newInstance(constructorMethodMirror!.constructorName, []);
@@ -47,7 +48,13 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
 
     ///set class info
     var classInfo = ClassInfo();
-    classInfo.type = classMirror.isAbstract ? 1 : 0;
+    if (classMirror.isAbstract) {
+      classInfo.type = ClassType.abstract;
+    } else if (classMirror.isEnum) {
+      classInfo.type = ClassType.enumType;
+    } else {
+      classInfo.type = ClassType.normal;
+    }
     classInfo.name = element.toString();
     genClass.classInfo = classInfo;
 
@@ -68,62 +75,67 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
 
     ///set method
     var allMethod = <MethodInfo>[];
-    var methodList = declarations.values
-        .where((element) => element is MethodMirror && !element.isConstructor)
-        .map((e) => e as MethodMirror)
-        .toList();
-    methodList.asMap().forEach((index, element) {
-      String methodLineStr = fileContent[element.location!.line - 1];
-      var method = MethodInfo();
-      allMethod.add(method);
+    if (classInfo.type != ClassType.enumType) {
+      var methodList = declarations.values
+          .where((element) => element is MethodMirror && !element.isConstructor)
+          .map((e) => e as MethodMirror)
+          .toList();
+      methodList.asMap().forEach((index, element) {
+        String methodLineStr = fileContent[element.location!.line - 1];
+        var method = MethodInfo();
+        method.name = MirrorSystem.getName(element.simpleName);
+        method.isAbstract = element.isAbstract;
+        method.originDeclaration = methodLineStr;
+        int argParamsStartIndex =
+            methodLineStr.indexOf(method.name) + method.name.length + 1;
+        element.parameters.forEach((param) {
+          // param.isOptional
+          var property = Property();
+          method.args.add(property);
+          var type = param.type;
+          property.type = MirrorSystem.getName(type.qualifiedName);
+          property.name = MirrorSystem.getName(param.simpleName);
+          String startStr = methodLineStr.substring(argParamsStartIndex);
+          int start = startStr.indexOf(property.type.split(".").last);
+          int end = startStr.indexOf(" " + property.name, start) + 1;
+          argParamsStartIndex += end + property.name.length;
+          startStr = startStr
+              .substring(start + property.type.split(".").last.length, end)
+              .trim();
+          if (startStr.endsWith("?")) {
+            property.canBeNull = true;
+            startStr = startStr.substring(0, startStr.length - 1);
+          }
+          if (startStr.isEmpty) {
+            startStr = "<>";
+          }
+          startStr = startStr.replaceAll("<", "{").replaceAll(">", "}");
+          String newLineContent = _formatTypeStr2JsonStr(startStr, 0, "");
+          Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
+          _findMethodArgumentsType(
+              property, param.type.typeArguments, typeJson);
+        });
 
-      method.name = MirrorSystem.getName(element.simpleName);
-      method.isAbstract = element.isAbstract;
-      method.originDeclaration = methodLineStr;
-      int argParamsStartIndex =
-          methodLineStr.indexOf(method.name) + method.name.length + 1;
-      element.parameters.forEach((param) {
-        // param.isOptional
-        var property = Property();
-        method.args.add(property);
-        var type = param.type;
-        property.type = MirrorSystem.getName(type.qualifiedName);
-        property.name = MirrorSystem.getName(param.simpleName);
-        String startStr = methodLineStr.substring(argParamsStartIndex);
-        int start = startStr.indexOf(property.type.split(".").last);
-        int end = startStr.indexOf(" " + property.name, start) + 1;
-
-        argParamsStartIndex += end + property.name.length;
-        startStr = startStr
-            .substring(start + property.type.split(".").last.length, end)
-            .trim();
-        if (startStr.endsWith("?")) {
-          property.canBeNull = true;
-          startStr = startStr.substring(0, startStr.length - 1);
+        var returnProperty = Property();
+        String targetLineStr =
+            methodLineStr.split(method.name).first.replaceAll(" ", "");
+        if (targetLineStr.endsWith("?")) {
+          returnProperty.canBeNull = true;
         }
-        if (startStr.isEmpty) {
-          startStr = "<>";
+        if (targetLineStr.isNotEmpty) {
+          targetLineStr = "<$targetLineStr>";
+          String jsonStr =
+              targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
+          String newLineContent = _formatTypeStr2JsonStr(jsonStr, 0, "");
+          Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
+          _findMethodArgumentsType(
+              returnProperty, [element.returnType], typeJson);
+          method.returnType = returnProperty.subType[0];
+          method.returnType.canBeNull = returnProperty.canBeNull;
+          allMethod.add(method);
         }
-        startStr = startStr.replaceAll("<", "{").replaceAll(">", "}");
-        String newLineContent = _formatTypeStr2JsonStr(startStr, 0, "");
-        Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
-        _findMethodArgumentsType(property, param.type.typeArguments, typeJson);
       });
-
-      var returnProperty = Property();
-      String targetLineStr =
-          methodLineStr.split(method.name).first.replaceAll(" ", "");
-      if (targetLineStr.endsWith("?")) {
-        returnProperty.canBeNull = true;
-      }
-      targetLineStr = "<$targetLineStr>";
-      String jsonStr = targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
-      String newLineContent = _formatTypeStr2JsonStr(jsonStr, 0, "");
-      Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
-      _findMethodArgumentsType(returnProperty, [element.returnType], typeJson);
-      method.returnType = returnProperty.subType[0];
-      method.returnType.canBeNull = returnProperty.canBeNull;
-    });
+    }
     genClass.methods = allMethod;
   });
 
@@ -146,25 +158,27 @@ List<Property> _parsePropertyTypes(
     property.type = MirrorSystem.getName(type.qualifiedName);
     property.name = MirrorSystem.getName(value.simpleName);
     property.originDeclaration = fileContent[locations[index].line - 1];
-    String targetLineStr = _checkPropertyCanBeNull(
-      property,
-      locations,
-      index,
-    );
-    if (value.isStatic) {
-      InstanceMirror instanceMirror = classMirror.getField(value.simpleName);
-      property.defaultValue1 = "${instanceMirror.reflectee}";
-    } else if (instanceMirror != null) {
-      property.defaultValue1 =
-          "${instanceMirror.getField(value.simpleName).reflectee}";
+    if (!classMirror.isEnum) {
+      String targetLineStr = _checkPropertyCanBeNull(
+        property,
+        locations,
+        index,
+      );
+      if (value.isStatic) {
+        InstanceMirror instanceMirror = classMirror.getField(value.simpleName);
+        property.defaultValue1 = "${instanceMirror.reflectee}";
+      } else if (instanceMirror != null) {
+        property.defaultValue1 =
+            "${instanceMirror.getField(value.simpleName).reflectee}";
+      }
+      property.isStatic = value.isStatic;
+      property.isConst = value.isConst;
+      property.isPrivate = value.isPrivate;
+      String jsonStr = targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
+      String newLineContent = _formatTypeStr2JsonStr(jsonStr, 0, "");
+      Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
+      _findMethodArgumentsType(property, value.type.typeArguments, typeJson);
     }
-    property.isStatic = value.isStatic;
-    property.isConst = value.isConst;
-    property.isPrivate = value.isPrivate;
-    String jsonStr = targetLineStr.replaceAll("<", "{").replaceAll(">", "}");
-    String newLineContent = _formatTypeStr2JsonStr(jsonStr, 0, "");
-    Map<dynamic, dynamic> typeJson = jsonDecode(newLineContent);
-    _findMethodArgumentsType(property, value.type.typeArguments, typeJson);
   });
   return parameters;
 }
