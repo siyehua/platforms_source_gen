@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:platforms_source_gen/bean/class_parse.dart';
+
 import 'bean/method_parse.dart';
 import 'platforms_source_gen.dart';
 import 'bean/property_parse.dart';
-import 'type_utils.dart';
+import 'extension/string_extension.dart';
 
 enum ObjectivePropertType {
   base,
@@ -13,7 +15,7 @@ enum ObjectivePropertType {
 }
 
 class ObjectiveCCreate {
-  static const Map<String, String> baseTypeMap = {
+  static Map<String, String> baseTypeMap = {
     "dart.core.bool": "BOOL",
     "dart.core.int": "int",
     "dart.core.double": "double",
@@ -41,110 +43,71 @@ class ObjectiveCCreate {
     if (projectPrefix.isEmpty) {
       projectPrefix = "PSG"; // platforms source generator
     }
-    createHeaderFile(projectPrefix, savePath, genClassBeans);
-    createImplementFile(projectPrefix, savePath, genClassBeans);
+    _createHeaderFile(projectPrefix, savePath, genClassBeans);
+    _createImplementFile(projectPrefix, savePath, genClassBeans);
   }
 
-  static void createHeaderFile(
-      String projectPrefix, String savePath, List<GenClassBean> genClassBeans) {
-    Directory iosTargetDir = Directory(savePath);
-    prefix = projectPrefix;
-    bool exists = iosTargetDir.existsSync();
-    if (!exists) {
-      iosTargetDir.createSync(recursive: true);
+  static ObjectivePropertType typeOf(Property property) {
+    if (baseTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.base;
+    } else if (classTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.systemClass;
+    } else if (specialTypeMap.keys.contains(property.type)) {
+      return ObjectivePropertType.specialType;
+    } else {
+      return ObjectivePropertType.customClass;
     }
-    genClassBeans.forEach((value) {
-      File ocHeaderFile =
-          File(savePath + "/" + projectPrefix + value.classInfo.name + ".h");
-      //package
-      String allContent = "";
-
-      //import
-      List<String> imports = [
-        "#import <Foundation/Foundation.h>\n",
-      ];
-      String importStr = imports
-          .toString()
-          .replaceAll("[", "")
-          .replaceAll("]", "")
-          .replaceAll(",", "");
-
-      allContent += "${importStr}";
-      allContent += "${staticPropertyImplementation(value)}";
-      if (!_isStaticPropertiesOnly(value)) {
-        allContent += getCustomClassImport(value);
-        allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
-
-        //property
-        String propertyStr = property(value.properties);
-
-        //method
-        String methodStr = method(value.methods);
-
-        String defineString = "\n";
-        String defineSuffixString = "";
-        if (_haveAbstractMethods(value)) {
-          defineString += "@protocol";
-          defineSuffixString = "<NSObject>\n@optional";
-        } else {
-          defineString += "@interface";
-          defineSuffixString = ": NSObject <NSCopying>";
-        }
-        allContent += "${defineString} ${projectPrefix}${value.classInfo.name}";
-        allContent +=
-            " $defineSuffixString\n\n$propertyStr\n${methodStr}\n@end\nNS_ASSUME_NONNULL_END";
-      }
-      if (!ocHeaderFile.parent.existsSync()) {
-        ocHeaderFile.parent.createSync(recursive: true);
-      }
-      ocHeaderFile.writeAsStringSync(allContent);
-      if (!ocHeaderFile.existsSync()) {
-        //if not create use dart io, use shell
-        _savePath(allContent, ocHeaderFile.path);
-      }
-    });
-  }
-
-  static void createImplementFile(
-      String projectPrefix, String savePath, List<GenClassBean> genClassBeans) {
-    genClassBeans.forEach((value) {
-      if (!_haveAbstractMethods(value) && !_isStaticPropertiesOnly(value)) {
-        File ocImplementFile =
-            File(savePath + "/" + projectPrefix + value.classInfo.name + ".m");
-        //package
-        String className = "${projectPrefix}${value.classInfo.name}";
-        String allContent = "#import \"$className.h\"\n";
-        allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
-        allContent += "@implementation $className";
-
-        //property
-        allContent += propertyImplementation(value.properties);
-
-        //method
-        allContent += methodImplementationForClass(value);
-
-        allContent += "\n@end\nNS_ASSUME_NONNULL_END";
-        if (!ocImplementFile.parent.existsSync()) {
-          ocImplementFile.parent.createSync(recursive: true);
-        }
-        ocImplementFile.writeAsStringSync(allContent);
-        if (!ocImplementFile.existsSync()) {
-          //if not create use dart io, use shell
-          _savePath(allContent, ocImplementFile.path);
-        }
-      }
-    });
   }
 
   /// create property
   static String property(List<Property> properties) {
     String propertyStr = "";
     properties.forEach((property) {
-      String typeStr = getPropertyStr(property);
+      String typeStr = _getPropertyStr(property);
       String name = property.name;
       propertyStr += "$typeStr$name;\n";
     });
     return propertyStr;
+  }
+
+  static String getTypeString(Property property,
+      {bool convertToClass = false}) {
+    String typeString = "";
+    switch (typeOf(property)) {
+      case ObjectivePropertType.base:
+        var baseType = baseTypeMap[property.type];
+        if (convertToClass) {
+          typeString += "NSNumber *";
+        } else {
+          typeString += "$baseType ";
+        }
+        break;
+      case ObjectivePropertType.systemClass:
+        var classType = classTypeMap[property.type];
+        if (classType!.isNotEmpty) {
+          typeString += "$classType";
+        }
+        if (property.subType.isNotEmpty) {
+          String subTypeString = _getSubTypeString(property);
+          typeString += subTypeString;
+        }
+        typeString += " ";
+        if (!_isBaseClassObjectType(property)) {
+          typeString += "*";
+        }
+        break;
+      case ObjectivePropertType.specialType:
+        typeString = getTypeString(property.subType.first);
+        break;
+      default:
+        typeString += "$prefix${property.type.split(".").last}";
+        if (property.subType.isNotEmpty) {
+          String subTypeString = _getSubTypeString(property, showNullTag: true);
+          typeString += subTypeString;
+        }
+        typeString += " *";
+    }
+    return typeString;
   }
 
   /// create method
@@ -179,12 +142,132 @@ class ObjectiveCCreate {
     return result;
   }
 
-  static String staticPropertyImplementation(GenClassBean classBean) {
+  static void _createHeaderFile(
+      String projectPrefix, String savePath, List<GenClassBean> genClassBeans) {
+    Directory iosTargetDir = Directory(savePath);
+    prefix = projectPrefix;
+    bool exists = iosTargetDir.existsSync();
+    if (!exists) {
+      iosTargetDir.createSync(recursive: true);
+    }
+    genClassBeans.forEach((value) {
+      if (value.classInfo.type == ClassType.enumType) {
+        // add all enum type into base type map
+        baseTypeMap[".${value.classInfo.name}"] =
+            "$projectPrefix${value.classInfo.name}";
+      }
+    });
+    genClassBeans.forEach((value) {
+      File ocHeaderFile =
+          File(savePath + "/" + projectPrefix + value.classInfo.name + ".h");
+      //package
+      String allContent = "";
+
+      //import
+      List<String> imports = [
+        "#import <Foundation/Foundation.h>\n",
+      ];
+      String importStr = imports
+          .toString()
+          .replaceAll("[", "")
+          .replaceAll("]", "")
+          .replaceAll(",", "");
+
+      allContent += "${importStr}";
+      allContent += "${_staticPropertyImplementation(value)}";
+      if (!_isStaticPropertiesOnly(value)) {
+        allContent += _getCustomClassImport(value);
+        allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
+
+        //property
+        String propertyStr = "";
+        //method
+        String methodStr = "";
+        String defineString = "\n";
+        String defineSuffixString = "";
+        String defineEndString = "@end";
+        switch (value.classInfo.type) {
+          case ClassType.abstract:
+            defineString += "@protocol";
+            defineSuffixString = " <NSObject>\n@optional";
+            methodStr = method(value.methods);
+            break;
+          case ClassType.enumType:
+            defineString += "typedef NS_ENUM(NSUInteger, ";
+            defineSuffixString = ") {";
+            defineEndString = "};";
+            propertyStr = _parseEnumMember(value);
+            break;
+          default:
+            defineString += "@interface";
+            defineSuffixString = " : NSObject <NSCopying>";
+            propertyStr = property(value.properties);
+            break;
+        }
+        allContent += "${defineString} ${projectPrefix}${value.classInfo.name}";
+        allContent +=
+            "$defineSuffixString\n\n$propertyStr\n${methodStr}\n$defineEndString\nNS_ASSUME_NONNULL_END";
+      }
+      if (!ocHeaderFile.parent.existsSync()) {
+        ocHeaderFile.parent.createSync(recursive: true);
+      }
+      ocHeaderFile.writeAsStringSync(allContent);
+      if (!ocHeaderFile.existsSync()) {
+        //if not create use dart io, use shell
+        _savePath(allContent, ocHeaderFile.path);
+      }
+    });
+  }
+
+  static String _parseEnumMember(GenClassBean classBean) {
+    String enumMemberString = "";
+    classBean.properties.forEach((property) {
+      if (property.type.split(".").last == classBean.classInfo.name) {
+        enumMemberString +=
+            "$prefix${classBean.classInfo.name}${property.name.capitalize()},\n";
+      }
+    });
+    return enumMemberString;
+  }
+
+  static void _createImplementFile(
+      String projectPrefix, String savePath, List<GenClassBean> genClassBeans) {
+    genClassBeans.forEach((value) {
+      if (value.classInfo.type == ClassType.normal &&
+          !_isStaticPropertiesOnly(value)) {
+        File ocImplementFile =
+            File(savePath + "/" + projectPrefix + value.classInfo.name + ".m");
+        //package
+        String className = "${projectPrefix}${value.classInfo.name}";
+        String allContent = "#import \"$className.h\"\n";
+        allContent += "\nNS_ASSUME_NONNULL_BEGIN\n";
+        allContent += "@implementation $className";
+
+        //property
+        allContent += _propertyImplementation(value.properties);
+
+        //method
+        allContent += _methodImplementationForClass(value);
+
+        allContent += "\n@end\nNS_ASSUME_NONNULL_END";
+        if (!ocImplementFile.parent.existsSync()) {
+          ocImplementFile.parent.createSync(recursive: true);
+        }
+        ocImplementFile.writeAsStringSync(allContent);
+        if (!ocImplementFile.existsSync()) {
+          //if not create use dart io, use shell
+          _savePath(allContent, ocImplementFile.path);
+        }
+      }
+    });
+  }
+
+  static String _staticPropertyImplementation(GenClassBean classBean) {
     String staticPropertyStr = "";
     classBean.properties.forEach((property) {
       if (property.isStatic) {
         staticPropertyStr +=
-            "#define ${prefix}${classBean.classInfo.name}_${property.name}\t${defaultValueOf(property)}\n";
+            "#define ${prefix}${classBean.classInfo.name}_${property.name}\t${_defaultValueOf(property)}\n";
       }
     });
     if (staticPropertyStr.isNotEmpty) {
@@ -193,7 +276,7 @@ class ObjectiveCCreate {
     return staticPropertyStr;
   }
 
-  static String propertyImplementation(List<Property> properties) {
+  static String _propertyImplementation(List<Property> properties) {
     String propertyStr =
         "\n- (instancetype)init\n{\n\tself = [super init];\n\tif (self) {\n";
     properties.forEach((property) {
@@ -205,7 +288,7 @@ class ObjectiveCCreate {
         }
         if (defaultValue.isNotEmpty) {
           propertyStr += "\t\tself.$name = ";
-          defaultValue = defaultValueOf(property);
+          defaultValue = _defaultValueOf(property);
           propertyStr += "$defaultValue;\n";
         }
       }
@@ -214,7 +297,7 @@ class ObjectiveCCreate {
     return propertyStr;
   }
 
-  static String methodImplementationForClass(GenClassBean classBean) {
+  static String _methodImplementationForClass(GenClassBean classBean) {
     String result = "\n- (nonnull id)copyWithZone:(nullable NSZone *)zone\n{\n";
     result +=
         "\t${prefix}${classBean.classInfo.name} *value = [[self.class allocWithZone:zone] init];\n";
@@ -225,7 +308,7 @@ class ObjectiveCCreate {
     return result;
   }
 
-  static String defaultValueOf(Property property) {
+  static String _defaultValueOf(Property property) {
     String defaultValue = property.defaultValue1;
     if (property.type == "dart.core.String") {
       defaultValue = "@\"$defaultValue\"";
@@ -241,7 +324,7 @@ class ObjectiveCCreate {
         defaultValue = "[NSArray array]";
       } else {
         List<String> arguments = defaultValue.split(", ");
-        arguments = convertObjcDefaultValueFor(
+        arguments = _convertObjcDefaultValueFor(
             arguments, typeOf(property.subType.first));
         defaultValue =
             "[NSArray arrayWithObjects:${arguments.join(", ")}, nil]";
@@ -253,10 +336,10 @@ class ObjectiveCCreate {
       } else {
         List<String> arguments = defaultValue.split(", ");
         Map<String, String> map = Map.fromIterable(arguments,
-            key: ((e) => converObjecDefaultValueFor(
+            key: ((e) => _converObjecDefaultValueFor(
                 e.substring(0, e.indexOf(":")),
                 typeOf(property.subType.first))),
-            value: ((e) => converObjecDefaultValueFor(
+            value: ((e) => _converObjecDefaultValueFor(
                 e.substring(e.indexOf(":") + 2),
                 typeOf(property.subType.last))));
         defaultValue = "@$map";
@@ -265,12 +348,12 @@ class ObjectiveCCreate {
     return defaultValue;
   }
 
-  static String converObjecDefaultValueFor(
+  static String _converObjecDefaultValueFor(
       String propertyString, ObjectivePropertType type) {
-    return convertObjcDefaultValueFor([propertyString], type).first;
+    return _convertObjcDefaultValueFor([propertyString], type).first;
   }
 
-  static List<String> convertObjcDefaultValueFor(
+  static List<String> _convertObjcDefaultValueFor(
       List<String> propertiesString, ObjectivePropertType type) {
     List<String> arguments = [];
     switch (type) {
@@ -290,8 +373,11 @@ class ObjectiveCCreate {
     return arguments;
   }
 
-  static String getCustomClassImport(GenClassBean classBean) {
+  static String _getCustomClassImport(GenClassBean classBean) {
     String importString = "";
+    if (classBean.classInfo.type == ClassType.enumType) {
+      return importString;
+    }
     Set<String> customClassTypes = Set();
     classBean.properties.forEach((value) {
       String typeString = getTypeString(value);
@@ -311,14 +397,14 @@ class ObjectiveCCreate {
     });
     customClassTypes.forEach((element) {
       if (element.startsWith(prefix)) {
-        importString += "#import \"$element.h\"\n";
+        importString += "#import \"${element.trim()}.h\"\n";
       }
     });
     return importString;
   }
 
   /// cover dart type to objc type
-  static String getPropertyStr(
+  static String _getPropertyStr(
     Property property, {
     bool showNullTag = true,
   }) {
@@ -338,7 +424,7 @@ class ObjectiveCCreate {
               (property.canBeNull ? ", nullable) " : ") ") + classType!;
         }
         if (property.subType.isNotEmpty) {
-          propertyString += getSubTypeString(property);
+          propertyString += _getSubTypeString(property);
         }
         propertyString += " ";
         if (!_isBaseClassObjectType(property)) {
@@ -355,7 +441,7 @@ class ObjectiveCCreate {
     return propertyComment + propertyString;
   }
 
-  static String getSubTypeString(Property property,
+  static String _getSubTypeString(Property property,
       {bool showNullTag = false}) {
     String subTypeString = "";
     subTypeString += "<";
@@ -373,62 +459,6 @@ class ObjectiveCCreate {
     }
     subTypeString += ">";
     return subTypeString;
-  }
-
-  static String getTypeString(Property property,
-      {bool convertToClass = false}) {
-    String typeString = "";
-    switch (typeOf(property)) {
-      case ObjectivePropertType.base:
-        var baseType = baseTypeMap[property.type];
-        if (convertToClass) {
-          typeString += "NSNumber *";
-        } else {
-          typeString += "$baseType ";
-        }
-        break;
-      case ObjectivePropertType.systemClass:
-        var classType = classTypeMap[property.type];
-        if (classType!.isNotEmpty) {
-          typeString += "$classType";
-        }
-        if (property.subType.isNotEmpty) {
-          String subTypeString = getSubTypeString(property);
-          typeString += subTypeString;
-        }
-        typeString += " ";
-        if (!_isBaseClassObjectType(property)) {
-          typeString += "*";
-        }
-        break;
-      case ObjectivePropertType.specialType:
-        typeString = getTypeString(property.subType.first);
-        break;
-      default:
-        typeString += "$prefix${property.type.split(".").last}";
-        if (property.subType.isNotEmpty) {
-          String subTypeString = getSubTypeString(property, showNullTag: true);
-          typeString += subTypeString;
-        }
-        typeString += " *";
-    }
-    return typeString;
-  }
-
-  static ObjectivePropertType typeOf(Property property) {
-    if (baseTypeMap.keys.contains(property.type)) {
-      return ObjectivePropertType.base;
-    } else if (classTypeMap.keys.contains(property.type)) {
-      return ObjectivePropertType.systemClass;
-    } else if (specialTypeMap.keys.contains(property.type)) {
-      return ObjectivePropertType.specialType;
-    } else {
-      return ObjectivePropertType.customClass;
-    }
-  }
-
-  static bool _haveAbstractMethods(GenClassBean classBean) {
-    return classBean.methods.isNotEmpty;
   }
 
   static bool _isBaseClassObjectType(Property property) {
