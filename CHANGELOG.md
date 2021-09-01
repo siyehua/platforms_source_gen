@@ -142,3 +142,7 @@
 
 * Feat: Support reading dart methods and properties' origin declaraction, now iOS generated code can add them as a comment.
 * Update: Now iOS generated code will add class name prefix to static properties.
+
+## 0.7.6
+
+* Fix: iOS will parse "_Nullable" as import problem

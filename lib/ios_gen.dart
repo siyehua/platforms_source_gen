@@ -390,6 +390,7 @@ class ObjectiveCCreate {
       method.args.forEach((arg) {
         String typeString = getTypeString(arg);
         typeString = typeString.replaceAll(" *", "");
+        typeString = typeString.replaceAll(" _Nullable", "");
         typeString = typeString.replaceAll("<", ", ");
         typeString = typeString.replaceAll(">", "");
         customClassTypes.addAll(typeString.split(", "));
