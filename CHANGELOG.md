@@ -150,3 +150,7 @@
 ## 0.7.7
 
 * Fix: android create abstract class error
+
+## 0.7.7
+
+* Feat: java support enum type

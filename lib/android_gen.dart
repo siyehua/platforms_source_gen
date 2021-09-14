@@ -10,8 +10,8 @@ import 'type_utils.dart';
 
 /// Java file create
 class JavaCreate {
-  static void create(
-      String packageName, String defaultSavePath, List<GenClassBean> genClassBeans,
+  static void create(String packageName, String defaultSavePath,
+      List<GenClassBean> genClassBeans,
       {bool nullSafe = true}) {
     Directory androidTargetDir = Directory(defaultSavePath);
     bool exists = androidTargetDir.existsSync();
@@ -20,7 +20,7 @@ class JavaCreate {
     }
     genClassBeans.forEach((value) {
       var path = defaultSavePath;
-      if(value.savePath.isNotEmpty) {
+      if (value.savePath.isNotEmpty) {
         path = value.savePath;
       }
       File javaFile = File(path + "/" + value.classInfo.name + ".java");
@@ -35,7 +35,8 @@ class JavaCreate {
         "import org.jetbrains.annotations.NotNull;\n",
         "import org.jetbrains.annotations.Nullable;\n",
       ];
-      imports.addAll(value.imports.where((element) => !element.contains(".dart")));
+      imports
+          .addAll(value.imports.where((element) => !element.contains(".dart")));
       String importStr = imports
           .toString()
           .replaceAll("[", "")
@@ -51,6 +52,8 @@ class JavaCreate {
       String absStr = "class";
       if (value.classInfo.type == ClassType.abstract) {
         absStr = "interface";
+      } else if (value.classInfo.type == ClassType.enumType) {
+        absStr = "enum";
       }
       allContent +=
           "${importStr}public ${absStr} ${value.classInfo.name} {\n$propertyStr ${methodStr} \n}";
@@ -71,6 +74,18 @@ class JavaCreate {
   /// create property
   static String property(GenClassBean genBean, List<Property> properties) {
     String propertyStr = "";
+
+    if (genBean.classInfo.type == ClassType.enumType) {
+      properties
+          .where((element) =>
+              element.name != "index" &&
+              element.name != "_name" &&
+              element.name != "values")
+          .forEach((element) {
+        propertyStr += "\t" + element.name.toUpperCase() + ",\n";
+      });
+      return propertyStr;
+    }
     properties.forEach((property) {
       String typeStr = getTypeStr(property, wantAddPre: true);
       String name = property.name;

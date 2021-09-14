@@ -28,8 +28,7 @@ abstract class IAccount {
     with multiple lines
     and many things  
    */
-  Future<List<String>?> getList(String? name, String password, String? name2,
-      String password3, String? namefe, String passwordeff);
+  Future<List<String>?> getList(String? name, String password, String? name2, String password3, String? namefe, String passwordeff);
 
   /* another comment for get map */
   Future<Map<String?, int>> getMap();
