@@ -189,7 +189,7 @@ class ObjectiveCCreate {
         switch (value.classInfo.type) {
           case ClassType.abstract:
             defineString += "@protocol";
-            defineSuffixString = " <NSObject>\n@optional";
+            defineSuffixString = " <NSObject>\n@required";
             methodStr = method(value.methods);
             break;
           case ClassType.enumType:
