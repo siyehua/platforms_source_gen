@@ -11,6 +11,7 @@ class MethodInfo {
   MethodInfo.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     originDeclaration = json['originDeclaration'];
+    comment = json['comment'];
     isAbstract = json['isAbstract'];
     if (json['args'] != null) {
       args = [];
@@ -27,6 +28,7 @@ class MethodInfo {
     final Map<String, dynamic> data = Map<String, dynamic>();
     data['name'] = this.name;
     data['originDeclaration'] = this.originDeclaration;
+    data['comment'] = this.comment;
     data['isAbstract'] = this.isAbstract;
     data['args'] = this.args.map((v) => v.toJson()).toList();
     data['returnType'] = this.returnType.toJson();
@@ -38,6 +40,7 @@ class MethodInfo {
     return '''{
                 "name": "$name", 
                 "originDeclaration": "$originDeclaration",
+                "comment": "$comment",
                 "args": $args, 
                 "isAbstract": $isAbstract, 
                 "returnType": $returnType

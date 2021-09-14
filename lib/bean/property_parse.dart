@@ -17,6 +17,7 @@ class Property {
     name = json['name'];
     defaultValue1 = json['defaultValue1'];
     originDeclaration = json['originDeclaration'];
+    comment = json['comment'];
     isStatic = json['isStatic'];
     isConst = json['isConst'];
     isFinal = json['isFinal'];
@@ -37,6 +38,7 @@ class Property {
     data['name'] = this.name;
     data['defaultValue1'] = this.defaultValue1;
     data['originDeclaration'] = this.originDeclaration;
+    data['comment'] = this.comment;
     data['isStatic'] = this.isStatic;
     data['isConst'] = this.isConst;
     data['isFinal'] = this.isFinal;
@@ -53,6 +55,7 @@ class Property {
                 "name": "$name", 
                 "defaultValue1": "$defaultValue1", 
                 "originDeclaration": "$originDeclaration",
+                "comment": "$comment",
                 "isStatic": $isStatic, 
                 "isConst": $isConst, 
                 "isFinal": $isFinal, 

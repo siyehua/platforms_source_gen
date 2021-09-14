@@ -155,7 +155,10 @@ List<Property> _parsePropertyTypes(
     List<VariableMirror> params,
     List<SourceLocation> locations) {
   var parameters = <Property>[];
-  var lastPropertyLocation = locations.first.line;
+  var lastPropertyLocation = 0;
+  if (locations.isNotEmpty) {
+    lastPropertyLocation = classMirror.location!.line;
+  }
   params.asMap().forEach((index, value) {
     var property = Property();
     parameters.add(property);
@@ -243,6 +246,9 @@ void _findMethodArgumentsType(Property target, List<TypeMirror> typeArguments,
 
 String _parseComment(List<String> fileContent, int methodDeclaredLocation,
     int lastMethodDecalaredLocation) {
+  if (lastMethodDecalaredLocation > methodDeclaredLocation) {
+    return "";
+  }
   List<String> comment =
       fileContent.sublist(lastMethodDecalaredLocation, methodDeclaredLocation);
   String result = "";
