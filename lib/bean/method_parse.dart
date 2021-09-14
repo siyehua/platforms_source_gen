@@ -3,6 +3,7 @@ import 'property_parse.dart';
 class MethodInfo {
   String name = "";
   String originDeclaration = "";
+  String comment = "";
   List<Property> args = [];
   Property returnType = Property();
   bool isAbstract = false;

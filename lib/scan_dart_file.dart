@@ -80,12 +80,16 @@ List<GenClassBean> reflectStart(List<Type> types, String path) {
           .where((element) => element is MethodMirror && !element.isConstructor)
           .map((e) => e as MethodMirror)
           .toList();
+      var lastMethodLocation = classMirror.location!.line;
       methodList.asMap().forEach((index, element) {
         String methodLineStr = fileContent[element.location!.line - 1];
         var method = MethodInfo();
         method.name = MirrorSystem.getName(element.simpleName);
         method.isAbstract = element.isAbstract;
         method.originDeclaration = methodLineStr;
+        method.comment = _parseComment(
+            fileContent, element.location!.line - 1, lastMethodLocation);
+        lastMethodLocation = element.location!.line - 1;
         int argParamsStartIndex =
             methodLineStr.indexOf(method.name) + method.name.length + 1;
         element.parameters.forEach((param) {
@@ -151,6 +155,7 @@ List<Property> _parsePropertyTypes(
     List<VariableMirror> params,
     List<SourceLocation> locations) {
   var parameters = <Property>[];
+  var lastPropertyLocation = locations.first.line;
   params.asMap().forEach((index, value) {
     var property = Property();
     parameters.add(property);
@@ -158,6 +163,9 @@ List<Property> _parsePropertyTypes(
     property.type = MirrorSystem.getName(type.qualifiedName);
     property.name = MirrorSystem.getName(value.simpleName);
     property.originDeclaration = fileContent[locations[index].line - 1];
+    property.comment = _parseComment(
+        fileContent, locations[index].line - 1, lastPropertyLocation);
+    lastPropertyLocation = locations[index].line - 1;
     if (!classMirror.isEnum) {
       String targetLineStr = _checkPropertyCanBeNull(
         property,
@@ -231,6 +239,37 @@ void _findMethodArgumentsType(Property target, List<TypeMirror> typeArguments,
     target.subType.add(property);
     _findMethodArgumentsType(property, value.typeArguments, valueJson.value);
   });
+}
+
+String _parseComment(List<String> fileContent, int methodDeclaredLocation,
+    int lastMethodDecalaredLocation) {
+  List<String> comment =
+      fileContent.sublist(lastMethodDecalaredLocation, methodDeclaredLocation);
+  String result = "";
+  {
+    RegExp regExp = RegExp(r'\/\/[^\n]*');
+    List<Match> matchList = [];
+    comment.forEach((element) {
+      matchList.addAll(regExp.allMatches(element).toList());
+    });
+    matchList.map((Match m) {
+      return m.input.substring(m.start, m.end);
+    }).forEach((element) {
+      result += "$element\n";
+    });
+  }
+  {
+    RegExp regExp = RegExp(r'/\*[\w\W]*?\*/');
+    List<Match> matchList = regExp
+        .allMatches(comment.toString().replaceAll("[", "").replaceAll("]", ""))
+        .toList();
+    matchList.map((Match m) {
+      return m.input.substring(m.start, m.end);
+    }).forEach((element) {
+      result += "$element\n";
+    });
+  }
+  return result;
 }
 
 /// format type str to json str

@@ -3,6 +3,7 @@ class Property {
   String name = "";
   String defaultValue1 = "";
   String originDeclaration = "";
+  String comment = "";
   bool isStatic = false;
   bool isConst = false;
   bool isFinal = false;
