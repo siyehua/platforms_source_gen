@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:platforms_source_gen/bean/class_parse.dart';
+
 import 'bean/method_parse.dart';
 import 'gen_file_edit.dart';
 import 'platforms_source_gen.dart';
@@ -47,7 +49,7 @@ class JavaCreate {
       String methodStr = method(value.methods);
 
       String absStr = "class";
-      if (value.classInfo.type == 1) {
+      if (value.classInfo.type == ClassType.abstract) {
         absStr = "interface";
       }
       allContent +=

@@ -146,3 +146,7 @@
 ## 0.7.6
 
 * Fix: iOS will parse "_Nullable" as import problem
+
+## 0.7.7
+
+* Fix: android create abstract class error

@@ -107,7 +107,7 @@ Future<List<GenClassBean>> _parseFile(File file) async {
         print("class start:${classInfo.name}");
       } else if (classResult == 2) {
         print("class end:${classInfo.name}");
-        if (classInfo.name.isEmpty || classInfo.type == -1) {
+        if (classInfo.name.isEmpty || classInfo.type == ClassType.none) {
           //skip
           return;
         }
