@@ -115,7 +115,7 @@ class ObjectiveCCreate {
     String result = "";
     methods.forEach((method) {
       String methodComment =
-          "\n/// Dart method declaraction: ${method.originDeclaration}\n";
+          "\n${method.comment}/// Dart method declaraction: ${method.originDeclaration}\n";
       method.args.forEach((element) {
         methodComment +=
             "/// @param ${element.name} Agument ${element.name}, type: ${element.type}.\n";
@@ -189,7 +189,7 @@ class ObjectiveCCreate {
         switch (value.classInfo.type) {
           case ClassType.abstract:
             defineString += "@protocol";
-            defineSuffixString = " <NSObject>\n@optional";
+            defineSuffixString = " <NSObject>\n@required";
             methodStr = method(value.methods);
             break;
           case ClassType.enumType:
@@ -410,7 +410,7 @@ class ObjectiveCCreate {
     bool showNullTag = true,
   }) {
     String propertyComment =
-        "\n/// Dart property declaration: ${property.originDeclaration.trim()}.\n";
+        "\n${property.comment}/// Dart property declaration: ${property.originDeclaration.trim()}.\n";
     String propertyString = "@property (nonatomic, ";
     switch (typeOf(property)) {
       case ObjectivePropertType.base:

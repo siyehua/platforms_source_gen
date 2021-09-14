@@ -4,14 +4,34 @@ enum MyEnum {
 }
 
 abstract class IAccount {
+  // This is a comment for login method
+  // different kinds of comment
+  /*
+    a kind of comment
+    test
+    test
+  */
+  /* another comment  */
   Future<String?> login(String? name, Object password);
 
+  ///////// comment for getToken
   Future<String?> getToken();
 
+  /// isolate comment
+
+  // logout comment
+  // and seconed line for logout comment
   void logout();
 
-  Future<List<String>?> getList(String? name, String password, String? name2, String password3, String? namefe, String passwordeff);
+  /*
+    complicated comment for get list
+    with multiple lines
+    and many things  
+   */
+  Future<List<String>?> getList(String? name, String password, String? name2,
+      String password3, String? namefe, String passwordeff);
 
+  /* another comment for get map */
   Future<Map<String?, int>> getMap();
 
   void setMap(Map<int, bool>? a);
@@ -22,6 +42,7 @@ abstract class IAccount {
 }
 
 class MyClass {
+  // comment for propertiy abc
   InnerClass? abc;
   int? a;
   int b = 0;
