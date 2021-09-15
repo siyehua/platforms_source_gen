@@ -17,7 +17,7 @@ enum ObjectivePropertType {
 class ObjectiveCCreate {
   static Map<String, String> baseTypeMap = {
     "dart.core.bool": "BOOL",
-    "dart.core.int": "int",
+    "dart.core.int": "long long",
     "dart.core.double": "double",
   };
   static const Map<String, String> classTypeMap = {
