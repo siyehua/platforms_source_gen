@@ -154,3 +154,11 @@
 ## 0.7.7
 
 * Feat: java support enum type
+
+## 0.7.8
+
+* Feat: Support comment 
+
+## 0.7.9
+
+* Fix: dart's int now will convert into OC's longlong
